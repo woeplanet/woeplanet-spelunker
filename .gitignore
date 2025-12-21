@@ -1,0 +1,12 @@
+.mypy_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+dist/
+frontend/node_modules/
+.*rules
+.env
+static/**/*
+!static/.gitkeep
+storage/**/*
+!storage/.gitkeep

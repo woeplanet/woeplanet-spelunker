@@ -1,0 +1,17 @@
+{%- extends "base.html.j2" %}
+{%- block title %}Home{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+	<div id="content" class="col-sm-9 h-100">
+		<div class="page-banner">WOEplanet</div>
+		<div class="page-content">
+			<p><strong>WOEplanet</strong> is a searchable and linkable index of every single WhereOnEarth (WOE) ID published.</p>
+			<p>The data is derived from the Creative Commons licensed Yahoo! GeoPlanet data dumps.</p>
+			<p><a href="{{ url_for('place_endpoint', woeid=woeid) }}">A page for every WOEID!</a></p>
+		</div>
+		{%- include "includes/sidebar-info.html.j2" %}
+		{%- include "includes/footer.html.j2" %}
+	</div>
+	{%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}

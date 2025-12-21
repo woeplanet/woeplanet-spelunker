@@ -1,0 +1,22 @@
+{%- extends "base.html.j2" %}
+{%- block title %}{{ title }}{%- endblock %}
+{%- block content %}
+<div class="row">
+	<div class="w-100" id="content">
+		<div class="page-banner">{{ exc.status_code }}<span class="slug">&nbsp;{{ exc.status_code | http_phrase }}</span></div>
+		<div class="page-content">
+			<div id="error">
+				<div id="error-image">
+					<img src="https://http.dog/{{ exc.status_code }}.webp" />
+				</div>
+				<div id="error-text">
+					<p>The Spelunker said ...</p>
+                    <p>{{ exc.detail }}</p>
+                    <p>{{ exc.status_code | http_description }}<p>
+				</div>
+			</div>
+		</div>
+		{%- include "includes/footer.html.j2" %}
+	</div>
+</div>
+{%- endblock %}

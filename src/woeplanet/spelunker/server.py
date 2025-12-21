@@ -1,0 +1,49 @@
+"""
+WOEplanet Spelunker: server module
+"""
+
+import multiprocessing
+from http import HTTPStatus
+
+import uvicorn
+from starlette.applications import Starlette
+
+from woeplanet.spelunker.config.settings import get_settings
+from woeplanet.spelunker.handlers.exceptions import client_error_handler, server_error_handler
+from woeplanet.spelunker.handlers.lifespan import lifespan
+from woeplanet.spelunker.routers.routes import routes
+
+settings = get_settings()
+handlers = {
+    HTTPStatus.BAD_REQUEST.value: client_error_handler,
+    HTTPStatus.NOT_FOUND.value: client_error_handler,
+    HTTPStatus.INTERNAL_SERVER_ERROR.value: server_error_handler,
+}
+app = Starlette(
+    debug=settings.log_level == 'debug',
+    routes=routes(),
+    exception_handlers=handlers,  # type: ignore[arg-type]
+    lifespan=lifespan,
+)
+
+
+def main() -> None:
+    """
+    Server entrypoint
+    """
+
+    workers = multiprocessing.cpu_count() * 2 + 1
+    uvicorn.run(
+        'woeplanet.spelunker.server:app',
+        host=settings.host,
+        port=settings.port,
+        workers=workers,
+        log_level=settings.log_level,
+        log_config=settings.logging_config.as_posix(),
+        proxy_headers=True,
+        server_header=False,
+    )
+
+
+if __name__ == '__main__':
+    main()

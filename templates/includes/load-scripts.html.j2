@@ -1,0 +1,25 @@
+{%- if map %}
+<script type="text/javascript">
+window.org = window.org || {};
+window.org.woeplanet = window.org.woeplanet || {};
+org.woeplanet.woeid = {{ woeid }};
+org.woeplanet.credits_url = '{{ url_for('credits_endpoint') }}#map-credits';
+org.woeplanet.nullisland_url = '{{ url_for('static', path='geojson/null-island.geojson') }}';
+{%- if scale %}
+org.woeplanet.scale = {{ scale }};
+{%- endif %}
+{%- if doc['placetype_name'] %}
+org.woeplanet.placetype = '{{ doc['placetype_name'] }}';
+{%- endif %}
+{%- if bounds %}
+org.woeplanet.bounds = {{ bounds }};
+{%- elif centroid %}
+org.woeplanet.centroid = {{ centroid }};
+org.woeplanet.zoom = 13;
+{%- endif %}
+{%- if popup %}
+org.woeplanet.popup = '{{ popup }}';
+{%- endif %}
+</script>
+<script src="{{ url_for('static', path='js/site.js') }}"></script>
+{%- endif %}

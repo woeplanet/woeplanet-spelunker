@@ -1,0 +1,31 @@
+{
+    "name": "woeplanet-spelunker",
+    "version": "2.0.0",
+    "description": "The WOEplanet Spelunker",
+    "type": "module",
+    "repository": "https://github.com/woeplanet/woeplanet-spelunker",
+    "author": "Gary Gale <gary@vicchi.org>",
+    "license": "BSD-3",
+    "private": true,
+    "scripts": {
+        "build:js": "vite build",
+        "build:css": "sass scss/woeplanet.scss ../static/css/woeplanet.css --load-path=node_modules && postcss ../static/css/woeplanet.css -o ../static/css/woeplanet.css --use autoprefixer",
+        "build:assets": "mkdir -p ../static/images/leaflet ../static/geojson ../static/css ../static/icons && cp -r node_modules/leaflet/dist/images/* ../static/images/leaflet/ && cp node_modules/leaflet/dist/leaflet.css ../static/css/ && cp node_modules/null-island/GeoJSON/null-island.geo.json ../static/geojson/null-island.geojson && cp -r icons/* ../static/icons/",
+        "build": "yarn build:js && yarn build:css && yarn build:assets",
+        "watch:css": "sass --watch scss/woeplanet.scss ../static/css/woeplanet.css --load-path=node_modules",
+        "clean": "rm -rf ../static/js ../static/css ../static/images ../static/geojson ../static/icons"
+    },
+    "dependencies": {
+        "@popperjs/core": "^2.11.8",
+        "bootstrap": "5.3.8",
+        "leaflet": "^1.9.4",
+        "null-island": "git+ssh://github.com/nixta/null-island.git"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.22",
+        "postcss": "^8.5.6",
+        "postcss-cli": "^11.0.0",
+        "sass": "1.77.6",
+        "vite": "^6.0.3"
+    }
+}
