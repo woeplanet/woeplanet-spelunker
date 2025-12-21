@@ -1,0 +1,28 @@
+{%- extends "base.html.j2" %}
+{%- block title %}{{ title }}{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+	<div id="content" class="col-sm-9 h-100">
+        <div class="page-banner">
+            {{ total.countries }} <span class="slug">Countries</span>
+        </div>
+        <div class="page-content">
+            <p>There are currently {{ total.woeids | commafy }} places in WOEplanet{%- if includes %}&nbsp;(filtered){%- endif %}; these are their countries&hellip;</p>
+        </div>
+        <div id="search-results">
+            <ul id="query_results">
+                {%- for country in countries %}
+                <li>{{ country.count | commafy }} places are in <a href="{{ url_for('country_endpoint', iso=country.iso2|upper) }}{% if includes_qs %}?{{ includes_qs }}{% endif %}">{{ country.iso2 }}&nbsp;({{ country.name }})</a></li>
+                {%- endfor %}
+            </ul>
+            <p class="again">Search again including <a href="{{ url_for('countries_endpoint') }}?include=deprecated">deprecated places</a>, <a href="{{ url_for('countries_endpoint') }}?include=unknown">unknown places</a>, places that <a href="{{ url_for('countries_endpoint') }}?include=nullisland">visit Null Island</a> or <a href="{{ url_for('countries_endpoint') }}?include=deprecated,unknown,nullisland">everything</a>?</p>
+        </div>
+        {%- include "includes/sidebar-info.html.j2" %}
+        {%- include "includes/search-query.html.j2" %}
+        {%- include "includes/footer.html.j2" %}
+    </div>
+	{%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}
+
+
