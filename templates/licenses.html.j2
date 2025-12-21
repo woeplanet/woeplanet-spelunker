@@ -1,0 +1,24 @@
+{%- extends "base.html.j2" %}
+{%- block title %}Licenses{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+	<div id="content" class="col-sm-9 h-100">
+		<div class="page-banner">licenses</div>
+		<div class="page-content">
+			{%- for license in licenses %}
+			<div id="{{ license.key }}" class="license-entry">
+				<h3 class="license-key">
+                    <a href="{{ license.url }}" target="_blank">
+                        {{ license.key }}
+                    </a>
+                </h3>
+				<p class="license-attribution">{{ license.attribution }}</p>
+			</div>
+			{%- endfor %}
+		</div>
+		{%- include "includes/sidebar-info.html.j2" %}
+		{%- include "includes/footer.html.j2" %}
+	</div>
+	{%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}
