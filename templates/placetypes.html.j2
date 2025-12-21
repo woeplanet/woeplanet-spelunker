@@ -1,0 +1,28 @@
+{%- extends "base.html.j2" %}
+{%- block title %}{{ title }}{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+	<div id="content" class="col-sm-9 h-100">
+        <div class="page-banner">
+            {{ total.placetypes }} <span class="slug">Placetypes</span>
+        </div>
+        <div class="page-content">
+            <p>There are currently {{ total.woeids | commafy }} places in WOEplanet{%- if includes %}&nbsp;(filtered){%- endif %}; these are their placetypes&hellip;</p>
+        </div>
+        <div id="search-results">
+            <ul id="query_results">
+                {%- for placetype in placetypes %}
+                <li>{{ placetype.count | commafy }} places are <a href="{{ url_for('placetype_endpoint', placetype=placetype.shortname|lower) }}{% if includes_qs %}?{{ includes_qs }}{% endif %}">{{ placetype.name | anyfy | lower }}</a></li>
+                {%- endfor %}
+            </ul>
+            <p class="again">Search again including <a href="{{ url_for('placetypes_endpoint') }}?include=deprecated">deprecated places</a>, <a href="{{ url_for('placetypes_endpoint') }}?include=unknown">unknown places</a>, places that <a href="{{ url_for('placetypes_endpoint') }}?include=nullisland">visit Null Island</a> or <a href="{{ url_for('placetypes_endpoint') }}?include=deprecated,unknown,nullisland">everything</a>?</p>
+        </div>
+        {%- include "includes/sidebar-info.html.j2" %}
+        {%- include "includes/search-query.html.j2" %}
+		{%- include "includes/footer-bottom.html.j2" %}
+    </div>
+	{%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}
+
+
