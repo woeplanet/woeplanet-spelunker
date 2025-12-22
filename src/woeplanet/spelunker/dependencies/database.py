@@ -25,22 +25,6 @@ from woeplanet.spelunker.dependencies.cache import disk_cache
 logger = logging.getLogger(__name__)
 
 
-def _totals_cache_key(*, filters: 'SearchFilters') -> str:
-    """
-    Build cache key for total WOEIDs query.
-    """
-
-    return f'totals:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
-
-
-def _facets_cache_key(*, filters: 'SearchFilters') -> str:
-    """
-    Build cache key for placetype facets query.
-    """
-
-    return f'facets:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
-
-
 @dataclass
 class PlaceFilters:
     """
@@ -81,6 +65,17 @@ class PaginatedResult:
 
     items: list[dict[str, Any]]
     has_more: bool
+
+
+def _make_cache_key(prefix: str) -> Callable[..., str]:
+    """
+    Factory to build cache key functions with a given prefix.
+    """
+
+    def key_builder(*, filters: SearchFilters) -> str:
+        return f'{prefix}:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
+
+    return key_builder
 
 
 class Database:
@@ -216,7 +211,6 @@ class Database:
         """  # noqa: S608
 
         logger.debug('%s - %s', query, params)
-
         cursor = await self._conn.execute(query, params)
         row = await cursor.fetchone()
         if row is None:
@@ -283,6 +277,7 @@ class Database:
             WHERE p.woe_id IN ({placeholders})
         """  # noqa: S608
 
+        logger.debug('%s - %s', query, woe_ids)
         cursor = await self._conn.execute(query, woe_ids)
         rows = await cursor.fetchall()
 
@@ -301,7 +296,8 @@ class Database:
 
         return result
 
-    async def get_countries(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
+    @disk_cache(key_builder=_make_cache_key('countries'))
+    async def get_countries_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get all countries with place counts
         """
@@ -336,11 +332,12 @@ class Database:
             ORDER BY count DESC, c.name
         """  # noqa: S608
 
+        logger.debug('%s - %s', query, {})
         cursor = await self._conn.execute(query)
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
-    @disk_cache(key_fn=_totals_cache_key)
+    @disk_cache(key_builder=_make_cache_key('total_woeids'))
     async def get_total_woeids(self, *, filters: SearchFilters) -> int:
         """
         Get the total number of WOEIDs
@@ -369,6 +366,7 @@ class Database:
             {where_sql}
         """  # noqa: S608
 
+        logger.debug('%s - %s', query, {})
         cursor = await self._conn.execute(query)
         row = await cursor.fetchone()
         if not row:
@@ -379,7 +377,7 @@ class Database:
 
         return row[0]
 
-    @disk_cache(key_fn=_facets_cache_key)
+    @disk_cache(key_builder=_make_cache_key('placetypes'))
     async def get_placetype_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get all placetypes with place counts
@@ -415,7 +413,7 @@ class Database:
             ORDER BY count DESC
         """  # noqa: S608
 
-        logger.debug('%s', query)
+        logger.debug('%s - %s', query, {})
         cursor = await self._conn.execute(query)
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
@@ -513,6 +511,146 @@ class Database:
         if not filters.null_island:
             joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
             where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        query = f"""
+            SELECT COUNT(*)
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+        """  # noqa: S608
+
+        cursor = await self._conn.execute(query, params)
+        row = await cursor.fetchone()
+        return row[0] if row else 0
+
+    async def get_country_by_iso(self, iso: str) -> dict[str, Any] | None:
+        """
+        Get a country by ISO code (2 or 3 letter)
+        """
+
+        iso_upper = iso.upper()
+        query = """
+            SELECT woe_id, name, iso2, iso3
+            FROM countries
+            WHERE UPPER(iso2) = ? OR UPPER(iso3) = ?
+        """
+        logger.debug('%s - %s', query, (iso_upper, iso_upper))
+        cursor = await self._conn.execute(query, (iso_upper, iso_upper))
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+    async def get_places_by_country(  # noqa: PLR0913
+        self,
+        country_woe_id: int,
+        *,
+        filters: SearchFilters,
+        placetype: str | None = None,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int = 50,
+    ) -> PaginatedResult:
+        """
+        Get places by country with keyset pagination.
+        """
+
+        select_cols = [
+            'p.woe_id',
+            'p.name',
+            'pt.shortname as placetype_name',
+            'g.lat',
+            'g.lng',
+            'g.sw_lat',
+            'g.sw_lng',
+            'g.ne_lat',
+            'g.ne_lng',
+        ]
+        joins = [
+            'JOIN placetypes pt ON p.placetype_id = pt.id',
+            'JOIN admins a ON p.woe_id = a.woe_id',
+            'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
+        ]
+        where_clauses = ['a.country = ?']
+        params: list[Any] = [country_woe_id]
+
+        if placetype:
+            joins.append('JOIN placetypes pt_filter ON p.placetype_id = pt_filter.id')
+            where_clauses.append('LOWER(pt_filter.shortname) = ?')
+            params.append(placetype.lower())
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        if not filters.null_island:
+            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        if not filters.unknown:
+            where_clauses.append('p.placetype_id != 0')
+
+        if before:
+            where_clauses.append('p.woe_id < ?')
+            params.append(before)
+            order = 'DESC'
+        elif after:
+            where_clauses.append('p.woe_id > ?')
+            params.append(after)
+            order = 'ASC'
+        else:
+            order = 'ASC'
+
+        params.append(limit + 1)
+
+        query = f"""
+            SELECT {', '.join(select_cols)}
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+            ORDER BY p.woe_id {order}
+            LIMIT ?
+        """  # noqa: S608
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        rows = [dict(r) for r in await cursor.fetchall()]
+
+        has_more = len(rows) > limit
+        items = rows[:limit]
+
+        if before:
+            items = items[::-1]
+
+        return PaginatedResult(items=items, has_more=has_more)
+
+    async def get_places_by_country_count(
+        self,
+        country_woe_id: int,
+        *,
+        filters: SearchFilters,
+        placetype: str | None = None,
+    ) -> int:
+        """
+        Get count of places for a country.
+        """
+
+        joins = ['JOIN admins a ON p.woe_id = a.woe_id']
+        where_clauses = ['a.country = ?']
+        params: list[Any] = [country_woe_id]
+
+        if placetype:
+            joins.append('JOIN placetypes pt_filter ON p.placetype_id = pt_filter.id')
+            where_clauses.append('LOWER(pt_filter.shortname) = ?')
+            params.append(placetype.lower())
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        if not filters.null_island:
+            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
+            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        if not filters.unknown:
+            where_clauses.append('p.placetype_id != 0')
 
         query = f"""
             SELECT COUNT(*)

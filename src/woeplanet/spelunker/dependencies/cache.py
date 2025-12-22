@@ -54,7 +54,7 @@ def close_cache() -> None:
 
 
 def disk_cache(
-    key_fn: Callable[..., str],
+    key_builder: Callable[..., str],
     expire: int | None = None,
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     """
@@ -72,7 +72,7 @@ def disk_cache(
             if cache is None:
                 return await func(*args, **kwargs)
 
-            key = key_fn(**kwargs)
+            key = key_builder(**kwargs)
 
             result = cache.get(key)
             if result is not None:

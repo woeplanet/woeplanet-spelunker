@@ -50,8 +50,8 @@
 			<div class="col-sm-4 place-label label-basic">Country</div>
 			<div class="col-sm-8 place-info">
 				<span class="woe-iso">
-					<a href="{{ url_for('country_endpoint', iso=doc['ountry']) }}">{{doc['country']}}</a>
-					<div class="slug"><a href="{{ url_for('country_endpoint', iso=doc['country']) }}" class="click-here">click here to see all the places that are part of this country</a></div>
+					<a href="{{ url_for('country_search_endpoint', iso=doc['ountry']) }}">{{doc['country']}}</a>
+					<div class="slug"><a href="{{ url_for('country_search_endpoint', iso=doc['country']) }}" class="click-here">click here to see all the places that are part of this country</a></div>
 				</span>
 			</div>
 		</div>

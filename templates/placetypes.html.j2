@@ -12,10 +12,10 @@
         <div id="search-results">
             <ul id="query_results">
                 {%- for placetype in placetypes %}
-                <li>{{ placetype.count | commafy }} places are <a href="{{ url_for('placetype_endpoint', placetype=placetype.shortname|lower) }}{% if includes_qs %}?{{ includes_qs }}{% endif %}">{{ placetype.name | anyfy | lower }}</a></li>
+                <li>{{ placetype.count | commafy }} places are <a href="{{ url_for('placetype_search_endpoint', placetype=placetype.shortname|lower) }}{% if includes_qs %}?{{ includes_qs }}{% endif %}">{{ placetype.name | anyfy | lower }}</a></li>
                 {%- endfor %}
             </ul>
-            <p class="again">Search again including <a href="{{ url_for('placetypes_endpoint') }}?include=deprecated">deprecated places</a>, <a href="{{ url_for('placetypes_endpoint') }}?include=unknown">unknown places</a>, places that <a href="{{ url_for('placetypes_endpoint') }}?include=nullisland">visit Null Island</a> or <a href="{{ url_for('placetypes_endpoint') }}?include=deprecated,unknown,nullisland">everything</a>?</p>
+            <p class="again">Search again including <a href="{{ url_for('placetype_facets_endpoint') }}?include=deprecated">deprecated places</a>, <a href="{{ url_for('placetype_facets_endpoint') }}?include=unknown">unknown places</a>, places that <a href="{{ url_for('placetype_facets_endpoint') }}?include=nullisland">visit Null Island</a> or <a href="{{ url_for('placetype_facets_endpoint') }}?include=deprecated,unknown,nullisland">everything</a>?</p>
         </div>
         {%- include "includes/sidebar-info.html.j2" %}
         {%- include "includes/search-query.html.j2" %}
