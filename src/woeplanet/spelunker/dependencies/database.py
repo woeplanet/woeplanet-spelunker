@@ -10,14 +10,35 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 from aiosqlitepool import SQLiteConnectionPool
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
+if TYPE_CHECKING:
+    from starlette.applications import Starlette
+
+from woeplanet.spelunker.dependencies.cache import disk_cache
+
 logger = logging.getLogger(__name__)
+
+
+def _totals_cache_key(*, filters: 'SearchFilters') -> str:
+    """
+    Build cache key for total WOEIDs query.
+    """
+
+    return f'totals:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
+
+
+def _facets_cache_key(*, filters: 'SearchFilters') -> str:
+    """
+    Build cache key for placetype facets query.
+    """
+
+    return f'facets:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
 
 
 @dataclass
@@ -50,6 +71,16 @@ class SearchFilters:
     deprecated: bool = False
     unknown: bool = False
     null_island: bool = False
+
+
+@dataclass
+class PaginatedResult:
+    """
+    Paginated query result.
+    """
+
+    items: list[dict[str, Any]]
+    has_more: bool
 
 
 class Database:
@@ -309,6 +340,7 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    @disk_cache(key_fn=_totals_cache_key)
     async def get_total_woeids(self, *, filters: SearchFilters) -> int:
         """
         Get the total number of WOEIDs
@@ -347,6 +379,7 @@ class Database:
 
         return row[0]
 
+    @disk_cache(key_fn=_facets_cache_key)
     async def get_placetype_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get all placetypes with place counts
@@ -386,6 +419,111 @@ class Database:
         cursor = await self._conn.execute(query)
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
+
+    async def get_places_by_placetype(
+        self,
+        placetype_id: int,
+        *,
+        filters: SearchFilters,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int = 50,
+    ) -> PaginatedResult:
+        """
+        Get places by placetype with keyset pagination.
+        """
+
+        select_cols = [
+            'p.woe_id',
+            'p.name',
+            'pt.shortname as placetype_name',
+            'g.lat',
+            'g.lng',
+            'g.sw_lat',
+            'g.sw_lng',
+            'g.ne_lat',
+            'g.ne_lng',
+        ]
+        joins = [
+            'JOIN placetypes pt ON p.placetype_id = pt.id',
+            'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
+        ]
+        where_clauses = ['p.placetype_id = ?']
+        params: list[Any] = [placetype_id]
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        if not filters.null_island:
+            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        if before:
+            where_clauses.append('p.woe_id < ?')
+            params.append(before)
+            order = 'DESC'
+        elif after:
+            where_clauses.append('p.woe_id > ?')
+            params.append(after)
+            order = 'ASC'
+        else:
+            order = 'ASC'
+
+        params.append(limit + 1)
+
+        query = f"""
+            SELECT {', '.join(select_cols)}
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+            ORDER BY p.woe_id {order}
+            LIMIT ?
+        """  # noqa: S608
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        rows = [dict(r) for r in await cursor.fetchall()]
+
+        has_more = len(rows) > limit
+        items = rows[:limit]
+
+        if before:
+            items = items[::-1]
+
+        return PaginatedResult(items=items, has_more=has_more)
+
+    async def get_places_by_placetype_count(
+        self,
+        placetype_id: int,
+        *,
+        filters: SearchFilters,
+    ) -> int:
+        """
+        Get count of places for a placetype.
+        """
+
+        joins: list[str] = []
+        where_clauses = ['p.placetype_id = ?']
+        params: list[Any] = [placetype_id]
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        if not filters.null_island:
+            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
+            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        query = f"""
+            SELECT COUNT(*)
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+        """  # noqa: S608
+
+        cursor = await self._conn.execute(query, params)
+        row = await cursor.fetchone()
+        return row[0] if row else 0
 
     async def get_placetypes(self) -> list[dict[str, Any]]:
         """
@@ -497,12 +635,21 @@ async def init_pool(db_path: Path, geom_db_path: Path, pool_size: int = 10) -> S
 
 
 @asynccontextmanager
-async def get_db(request: Request) -> AsyncIterator[Database]:
+async def get_db(
+    request: Request | None = None,
+    app: 'Starlette | None' = None,
+) -> AsyncIterator[Database]:
     """
     Get a database connection from the pool
     """
 
-    pool = request.app.state.db_pool
+    if request is not None:
+        pool = request.app.state.db_pool
+    elif app is not None:
+        pool = app.state.db_pool
+    else:
+        msg = 'Either request or app must be provided'
+        raise ValueError(msg)
 
     async with pool.connection() as conn:
         yield Database(conn)

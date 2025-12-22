@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     static_dir: DirectoryPath
     templates_dir: DirectoryPath
     storage_dir: DirectoryPath
+    cache_dir: DirectoryPath
     db_path: FilePath
     geom_db_path: FilePath
 
