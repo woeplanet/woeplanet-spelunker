@@ -663,6 +663,55 @@ class Database:
         row = await cursor.fetchone()
         return row[0] if row else 0
 
+    async def get_placetypes_by_country(
+        self,
+        iso2: str,
+        *,
+        filters: SearchFilters,
+    ) -> list[dict[str, Any]]:
+        """
+        Get placetype facets (buckets with counts) for a given ISO2 country code.
+        """
+
+        iso_upper = iso2.upper()
+
+        joins = [
+            'JOIN placetypes pt ON p.placetype_id = pt.id',
+            'JOIN admins a ON p.woe_id = a.woe_id',
+            'JOIN countries c ON a.country = c.woe_id',
+        ]
+        where_clauses = ['UPPER(c.iso2) = ?']
+        params: list[Any] = [iso_upper]
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        if not filters.null_island:
+            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
+            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+        if not filters.unknown:
+            where_clauses.append('p.placetype_id != 0')
+
+        query = f"""
+            SELECT
+                p.placetype_id,
+                pt.shortname,
+                pt.name,
+                COUNT(*) as count
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+            GROUP BY p.placetype_id, pt.shortname, pt.name
+            ORDER BY count DESC
+        """  # noqa: S608
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+
     async def get_placetypes(self) -> list[dict[str, Any]]:
         """
         Get all placetypes

@@ -11,6 +11,16 @@
             </span>
         </div>
         <div id="search-results">
+            {%- if buckets %}
+            <div id="search-facets">
+                <div class="slug facets">filter by placetype:</div>
+                <ul>
+                {%- for bucket in buckets %}
+                    <li>{{ bucket.count | commafy }} <a href="{{ url_for('country_search_endpoint', iso=country.iso2) }}?placetype={{ bucket.shortname|lower }}">{{ bucket.name|lower|pluralise(bucket.count) }}</a></li>
+                {%- endfor %}
+                </ul>
+            </div>
+            {%- endif %}
             {%- if results %}
             <ol id="query_results">
             {%- for place in results %}

@@ -2,6 +2,7 @@
 WOEplanet Spelunker: pages package; countries page module
 """
 
+import logging
 from http import HTTPStatus
 
 from starlette.exceptions import HTTPException
@@ -14,6 +15,8 @@ from woeplanet.spelunker.config.place_scale import placetype_to_scale
 from woeplanet.spelunker.dependencies.database import get_db
 from woeplanet.spelunker.dependencies.templates import get_templater
 from woeplanet.spelunker.pages.random import _random_place
+
+logger = logging.getLogger(__name__)
 
 
 async def country_facets_endpoint(request: Request) -> HTMLResponse:
@@ -63,7 +66,9 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
     pagination = parse_pagination(request)
 
     async with get_db(request=request) as db:
+        buckets = await db.get_placetypes_by_country(iso2=iso, filters=parsed.filters)
         country = await db.get_country_by_iso(iso)
+
         if not country:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
@@ -117,6 +122,7 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
         'scale': placetype_to_scale(12),
         'doc': place,
         'pagination': paging,
+        'buckets': buckets,
     }
     content = await template.render_async(request=request, **template_args)
     return HTMLResponse(content)

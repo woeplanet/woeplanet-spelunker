@@ -7,7 +7,7 @@ from starlette.staticfiles import StaticFiles
 
 from woeplanet.spelunker.config.settings import get_settings
 from woeplanet.spelunker.pages.about import about_endpoint
-from woeplanet.spelunker.pages.countries import countries_endpoint, country_endpoint
+from woeplanet.spelunker.pages.countries import country_facets_endpoint, country_search_endpoint
 from woeplanet.spelunker.pages.credits import credits_endpoint
 from woeplanet.spelunker.pages.index import index_endpoint
 from woeplanet.spelunker.pages.licenses import licenses_endpoint
@@ -29,8 +29,8 @@ def routes() -> list[Route | Mount]:
         Route(path='/', endpoint=index_endpoint),
         Route(path='/about', endpoint=about_endpoint),
         Route(path='/credits', endpoint=credits_endpoint),
-        Route(path='/countries', endpoint=countries_endpoint),
-        Route(path='/countries/{iso:str}', endpoint=country_endpoint),
+        Route(path='/countries', endpoint=country_facets_endpoint),
+        Route(path='/countries/{iso:str}', endpoint=country_search_endpoint),
         Route(path='/id/{woeid:int}', endpoint=place_endpoint),
         Route(path='/id/{woeid:int}/map', endpoint=place_map_endpoint),
         Route(path='/id/{woeid:int}/nearby', endpoint=place_nearby_endpoint),
