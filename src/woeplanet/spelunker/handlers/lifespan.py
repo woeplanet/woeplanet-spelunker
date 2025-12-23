@@ -47,6 +47,8 @@ async def prewarm_cache(app: Starlette) -> None:
                 await db.get_placetype_facets(filters=filters)
                 await db.get_countries_facets(filters=filters)
 
+            await db.get_placetypes()
+
         cache.set(warm_key, 1, expire=3600)
         logger.info('Cache pre-warm complete in %.3fs', time.perf_counter() - start)
 

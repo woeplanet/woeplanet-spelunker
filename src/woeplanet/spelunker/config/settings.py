@@ -9,6 +9,8 @@ import dotenv
 from pydantic import DirectoryPath, FilePath, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+DEFAULT_CACHE_TTL = 3600  # 1 hour
+
 
 class Settings(BaseSettings):
     """
@@ -30,6 +32,8 @@ class Settings(BaseSettings):
 
     logging_config: FilePath
     log_level: Literal['trace', 'debug', 'info', 'warning', 'error', 'critical']
+
+    cache_ttl: int = DEFAULT_CACHE_TTL
 
     @field_validator('db_path', 'geom_db_path', mode='after')
     @classmethod

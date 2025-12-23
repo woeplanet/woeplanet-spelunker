@@ -13,6 +13,14 @@ from starlette.templating import Jinja2Templates
 from woeplanet.spelunker.common.languages import language_name
 from woeplanet.spelunker.config.settings import get_settings
 
+NAME_TYPES = {
+    'S': 'standard',
+    'P': 'preferred',
+    'V': 'variant',
+    'Q': 'colloquial',
+    'A': 'abbreviated',
+}
+
 settings = get_settings()
 collator = pyuca.Collator()
 inflect_engine = inflect.engine()
@@ -83,6 +91,14 @@ def comma_filter(value: int) -> str:
     return f'{value:,}'
 
 
+def name_type_filter(value: str) -> str:
+    """
+    Jinja filter; returns the name type description for a code
+    """
+
+    return NAME_TYPES.get(value, 'unknown')
+
+
 @lru_cache
 def get_templater() -> Jinja2Templates:
     """
@@ -99,5 +115,6 @@ def get_templater() -> Jinja2Templates:
     env.filters['http_description'] = http_description_filter
     env.filters['commafy'] = comma_filter
     env.filters['anyfy'] = any_filter
+    env.filters['name_type'] = name_type_filter
 
     return Jinja2Templates(env=env)

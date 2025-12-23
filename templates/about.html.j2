@@ -7,7 +7,7 @@
 		<div class="page-content">
 			<p><a href="{{ url_for('place_endpoint', woeid=woeid) }}">A page for every WOEID</a>.</p>
 			<p><a href="{{ url_for('country_search_endpoint', iso=iso) }}">A page for every country</a> <span class="slug">(and their <a href="{{ url_for('country_search_endpoint', iso=iso) }}?placetype=airport">airports</a>)</span>.</p>
-			<p><a href="{{ url_for('placetypes_endpoint') }}">A page for every placetype</a>.</p>
+			<p><a href="{{ url_for('placetype_facets_endpoint') }}">A page for every placetype</a>.</p>
 			<p><a href="{{ url_for('place_map_endpoint', woeid=woeid) }}">A map for every WOEID</a>.</p>
 			<p><a href="{{ url_for('search_endpoint') }}?q={{ name | urlencode }}">Search</a>.</p>
 			<p><a href="{{ url_for('place_nearby_endpoint', woeid=nearby) }}">Search nearby</a> <span class="slug">(and <a href="{{ url_for('nearby_endpoint') }}">nearby-er still</a>)</span>.</p>

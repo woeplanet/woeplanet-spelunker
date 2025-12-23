@@ -1,0 +1,31 @@
+{%- extends "base.html.j2" %}
+{%- block title %}{{ title }}{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+    <div id="content" class="col-sm-9 h-100">
+        <div class="page-banner">search <span class="slug">this is not a geocoder</span></div>
+        <div id="search">
+            <form id="searchbox" method="get" action="{{ url_for('search_endpoint') }}">
+                <div>
+                    <input type="text" name="q" size="20" id="q" value="{{ q|default('', true) }}">
+                    <input type="submit" value="find me" id="querysubmit">
+                </div>
+                <div class="mt-2">
+                    <select name="name-type" id="search-type">
+                        <option value="any"{% if not search_type or search_type == 'any' %} selected{% endif %}>any name</option>
+                        <option value="S"{% if search_type == 'S' %} selected{% endif %}>standard/official name</option>
+                        <option value="P"{% if search_type == 'P' %} selected{% endif %}>preferred name</option>
+                        <option value="V"{% if search_type == 'V' %} selected{% endif %}>variant name</option>
+                        <option value="Q"{% if search_type == 'Q' %} selected{% endif %}>colloquial name</option>
+                        <option value="A"{% if search_type == 'A' %} selected{% endif %}>abbreviation</option>
+                        <option value="woeid"{% if search_type == 'woeid' %} selected{% endif %}>WOE ID</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        {%- include "includes/sidebar-info.html.j2" %}
+        {%- include "includes/footer-bottom.html.j2" %}
+    </div>
+    {%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}
