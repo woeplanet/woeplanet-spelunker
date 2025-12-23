@@ -13,6 +13,8 @@ $sizes: (
 
 @import 'bootstrap/scss/bootstrap';
 
+$ypurple: #6000DB !default;
+
 html, body {
 	height: 100%;
 }
@@ -24,18 +26,13 @@ body {
 }
 
 a {
-	text-decoration: none;
+	text-decoration: dashed underline $ypurple;
 	color: #000;
 
     &:hover {
         font-weight: 700;
-		color: inherit;
-		text-decoration: inherit;
-    }
-
-    &:visited {
-        color: #333;
-		text-decoration: inherit;
+		color: $ypurple;
+		text-decoration: none;
     }
 }
 
@@ -251,7 +248,7 @@ td {
 #content {
 	padding-left: 0;
 	padding-right: 0;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 
 .page-content {
@@ -484,4 +481,8 @@ path {
 			display: inline;
 		}
 	}
+}
+
+.woe {
+	color: $ypurple;
 }
