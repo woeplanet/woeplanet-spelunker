@@ -1,0 +1,44 @@
+{%- extends "base.html.j2" %}
+{%- block title %}{{ title }}{%- endblock %}
+{%- block content %}
+<div class="row h-100">
+    <div id="content" class="col-sm-9 h-100">
+        <div class="page-banner">
+            {{ pagination.total | commafy }}
+            <span class="slug">
+                places that visit Null Island
+            </span>
+        </div>
+        <div id="search-results">
+            {%- if buckets %}
+            <div id="search-facets">
+                <div class="slug facets">filter by placetype:</div>
+                <ul>
+                {%- for bucket in buckets %}
+                    <li>{{ bucket.count | commafy }} {{ bucket.name|lower|pluralise(bucket.count) }}</li>
+                {%- endfor %}
+                </ul>
+            </div>
+            {%- endif %}
+            {%- if results %}
+            <ol id="query_results">
+            {%- for place in results %}
+                <li>
+                    <a href="{{ url_for('place_endpoint', woeid=place['woe_id']) }}">{{ place['name'] }}</a>
+                    <div class="slug">{{ place['name'] }} ({{ place.get('placetype_name', 'Unknown') }})</div>
+                </li>
+            {%- endfor %}
+            </ol>
+            <p class="again">Search again including <a href="{{ url_for('nullisland_endpoint') }}?include=deprecated">deprecated places</a> or <a href="{{ url_for('nullisland_endpoint') }}?include=unknown">unknown places</a>?</p>
+            {%- include "includes/pagination.html.j2" %}
+            {%- else %}
+            <p>&#x1F622;; nothing found ...</p>
+            {%- endif %}
+        </div>
+        {%- include "includes/search-query.html.j2" %}
+        {%- include "includes/footer-bottom.html.j2" %}
+    </div>
+    {%- include "includes/sidebar.html.j2" %}
+</div>
+{%- endblock %}
+
