@@ -28,13 +28,7 @@ function geoSuccess(position) {
 
 function geoError(error) {
     console.log('Error: navigator.geolocation.getCurrentPosition() failed')
-    const statusEl = document.getElementById('location-status')
-    const askingEl = document.getElementById('location-asking')
-    const errorEl = document.getElementById('location-error')
-
-    if (statusEl) statusEl.textContent = error.code + ' :' + error.message
-    if (askingEl) askingEl.style.display = 'none'
-    if (errorEl) errorEl.style.display = 'block'
+    showLocationError(error.code + ': ' + error.message)
 }
 
 export function initLocation() {
@@ -45,10 +39,24 @@ export function initLocation() {
     const lng = getParameterByName('lng')
 
     if (!lat && !lng) {
+        if (!window.isSecureContext) {
+            showLocationError('Geolocation requires a secure (HTTPS) connection')
+            return
+        }
         if ('geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(geoSuccess, geoError)
         } else {
-            console.log('No navigator.geolocation')
+            showLocationError('Your browser does not support geolocation')
         }
     }
+}
+
+function showLocationError(message) {
+    const statusEl = document.getElementById('location-status')
+    const askingEl = document.getElementById('location-asking')
+    const errorEl = document.getElementById('location-error')
+
+    if (statusEl) statusEl.textContent = message
+    if (askingEl) askingEl.style.display = 'none'
+    if (errorEl) errorEl.style.display = 'block'
 }

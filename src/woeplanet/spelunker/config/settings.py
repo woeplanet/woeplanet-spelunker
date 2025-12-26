@@ -10,6 +10,7 @@ from pydantic import DirectoryPath, FilePath, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CACHE_TTL = 3600  # 1 hour
+DEFAULT_NEARBY_DISTANCE = 5000  # 5 km
 
 
 class Settings(BaseSettings):
@@ -34,6 +35,7 @@ class Settings(BaseSettings):
     log_level: Literal['trace', 'debug', 'info', 'warning', 'error', 'critical']
 
     cache_ttl: int = DEFAULT_CACHE_TTL
+    nearby_distance: int = DEFAULT_NEARBY_DISTANCE
 
     @field_validator('db_path', 'geom_db_path', mode='after')
     @classmethod

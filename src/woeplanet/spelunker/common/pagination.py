@@ -41,7 +41,7 @@ def build_pagination_context(
     total: int,
 ) -> PaginationContext:
     """
-    Build full pagination context including page numbers.
+    Build full pagination context including page numbers (cursor-based).
     """
 
     prev_url = None
@@ -67,6 +67,43 @@ def build_pagination_context(
                     page=pagination.page - 1,
                 )
             )
+
+    return PaginationContext(
+        total=total,
+        page=pagination.page,
+        pages=pages,
+        urls=PaginationUrls(prev=prev_url, next=next_url),
+    )
+
+
+def build_offset_pagination_context(
+    request: Request,
+    result: PaginatedResult,
+    *,
+    pagination: PaginationParams,
+    total: int,
+) -> PaginationContext:
+    """
+    Build full pagination context including page numbers (offset-based).
+    """
+
+    prev_url = None
+    next_url = None
+    pages = max(1, math.ceil(total / pagination.limit))
+
+    if result.has_more:
+        next_url = str(
+            request.url.remove_query_params(['page']).include_query_params(
+                page=pagination.page + 1,
+            )
+        )
+
+    if pagination.page > 1:
+        prev_url = str(
+            request.url.remove_query_params(['page']).include_query_params(
+                page=pagination.page - 1,
+            )
+        )
 
     return PaginationContext(
         total=total,

@@ -4,6 +4,7 @@ WOEplanet Spelunker: dependencies package; database module.
 
 import json
 import logging
+import math
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -1087,6 +1088,129 @@ class Database:
         if row is None:
             return None
         return dict(row)
+
+    async def get_places_near_centroid(  # noqa: PLR0913
+        self,
+        lat: float,
+        lng: float,
+        distance: int,
+        filters: SearchFilters,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> PaginatedResult:
+        """
+        Get places within a specified distance (in metres) of a point.
+        Uses SpatiaLite ST_Distance with geodesic calculation.
+        """
+
+        # Bounding box pre-filter: ~111km per degree latitude, adjusted for longitude
+        lat_delta = distance / 111000.0
+        lng_delta = distance / (111000.0 * max(math.cos(math.radians(lat)), 0.01))
+
+        joins: list[str] = ['JOIN geometries.geometries g ON p.woe_id = g.woe_id']
+        where_clauses: list[str] = [
+            'g.lat BETWEEN ? AND ?',
+            'g.lng BETWEEN ? AND ?',
+        ]
+        # MakePoint params first (lng, lat), then WHERE clause params
+        params: list[Any] = [
+            lng,
+            lat,
+            lat - lat_delta,
+            lat + lat_delta,
+            lng - lng_delta,
+            lng + lng_delta,
+        ]
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        query = f"""
+            WITH origin AS (SELECT MakePoint(?, ?, 4326) AS pt),
+            candidates AS (
+                SELECT
+                    p.woe_id,
+                    p.name,
+                    p.placetype_id,
+                    pt.shortname as placetype_name,
+                    g.lat,
+                    g.lng,
+                    ST_Distance(g.geom, origin.pt, 1) as distance_m
+                FROM places p
+                JOIN placetypes pt ON p.placetype_id = pt.id
+                {' '.join(joins)}
+                CROSS JOIN origin
+                WHERE {' AND '.join(where_clauses)}
+            )
+            SELECT * FROM candidates
+            WHERE distance_m <= ?
+            ORDER BY distance_m ASC, woe_id ASC
+            LIMIT ? OFFSET ?
+        """  # noqa: S608
+
+        params.extend([distance, limit + 1, offset])
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        rows = [dict(r) for r in await cursor.fetchall()]
+
+        has_more = len(rows) > limit
+        items = rows[:limit]
+
+        return PaginatedResult(items=items, has_more=has_more)
+
+    async def get_places_near_centroid_count(
+        self,
+        lat: float,
+        lng: float,
+        distance: int,
+        filters: SearchFilters,
+    ) -> int:
+        """
+        Get count of places within a specified distance (in metres) of a point.
+        """
+
+        lat_delta = distance / 111000.0
+        lng_delta = distance / (111000.0 * max(math.cos(math.radians(lat)), 0.01))
+
+        joins: list[str] = ['JOIN geometries.geometries g ON p.woe_id = g.woe_id']
+        where_clauses: list[str] = [
+            'g.lat BETWEEN ? AND ?',
+            'g.lng BETWEEN ? AND ?',
+        ]
+        # MakePoint params first (lng, lat), then WHERE clause params
+        params: list[Any] = [
+            lng,
+            lat,
+            lat - lat_delta,
+            lat + lat_delta,
+            lng - lng_delta,
+            lng + lng_delta,
+            distance,
+        ]
+
+        if not filters.deprecated:
+            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
+            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+        query = f"""
+            WITH origin AS (SELECT MakePoint(?, ?, 4326) AS pt),
+            candidates AS (
+                SELECT p.woe_id,
+                    ST_Distance(g.geom, origin.pt, 1) as distance_m
+                FROM places p
+                {' '.join(joins)}
+                CROSS JOIN origin
+                WHERE {' AND '.join(where_clauses)}
+            )
+            SELECT COUNT(*) FROM candidates WHERE distance_m <= ?
+        """  # noqa: S608
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        row = await cursor.fetchone()
+        return row[0] if row else 0
 
 
 async def create_connection_factory(

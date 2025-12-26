@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, ValidationError
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
+from woeplanet.spelunker.config.settings import get_settings
 from woeplanet.spelunker.dependencies.database import SearchFilters
 
 VALID_COUNTRY_INCLUDES = frozenset({'deprecated', 'unknown', 'nullisland'})
@@ -51,6 +52,35 @@ class PaginationParams:
     before: int | None
     limit: int
     page: int
+
+
+@dataclass
+class NearbyParams:
+    """
+    Nearby query parameters.
+    """
+
+    lat: float | None
+    lng: float | None
+    distance: int
+
+
+def parse_nearby_params(request: Request) -> NearbyParams:
+    """
+    Parse nearby query params.
+    """
+
+    lat = request.query_params.get('lat')
+    lng = request.query_params.get('lng')
+    distance = request.query_params.get('distance')
+
+    settings = get_settings()
+
+    return NearbyParams(
+        lat=float(lat) if lat else None,
+        lng=float(lng) if lng else None,
+        distance=int(distance) if distance else settings.nearby_distance,
+    )
 
 
 def parse_filter_params(request: Request) -> FilterParams:
