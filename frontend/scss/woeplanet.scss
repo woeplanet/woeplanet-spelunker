@@ -15,6 +15,14 @@ $sizes: (
 
 $ypurple: #6000DB !default;
 
+.h-15 {
+	height: 15% !important;
+}
+
+.h-85 {
+	height: 85% !important;
+}
+
 html, body {
 	height: 100%;
 }
@@ -379,17 +387,10 @@ ul {
 	color: #aaa;
 }
 
-svg {
+svg:not(.leaflet-zoom-animated) {
 	width: 100%;
 	height: 100%;
 }
-
-path {
-	stroke: #ccffff;
-	stroke-width: 3px;
-	fill-opacity: .3;
-	fill: yellow;
- }
 
  #search-query {
 	 display: none;

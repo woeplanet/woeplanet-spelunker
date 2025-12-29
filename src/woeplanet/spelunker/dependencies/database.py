@@ -121,7 +121,7 @@ class Database:
             if filters.bounding_box:
                 select_cols.extend(['g.sw_lat', 'g.sw_lng', 'g.ne_lat', 'g.ne_lng'])
             if filters.geometry:
-                select_cols.append('g.geom')
+                select_cols.append('AsGeoJSON(g.geom) as geom')
 
         if filters.null_island:
             where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL AND g.geom IS NOT NULL)')

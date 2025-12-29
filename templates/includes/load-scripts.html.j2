@@ -20,6 +20,9 @@ org.woeplanet.zoom = 13;
 {%- if popup %}
 org.woeplanet.popup = '{{ popup }}';
 {%- endif %}
+{%- if geojson %}
+org.woeplanet.geojson = {{ geojson | safe }};
+{%- endif %}
 </script>
 <script src="{{ url_for('static', path='js/site.js') }}"></script>
 {%- endif %}

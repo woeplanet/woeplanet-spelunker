@@ -25,7 +25,8 @@ const defaults = {
     nullisland_url: '/geojson/null-island.geojson',
     popup: null,
     scale: null,
-    placetype: null
+    placetype: null,
+    geojson: null
 }
 
 Object.keys(defaults).forEach(key => {
@@ -120,8 +121,7 @@ export class WoeplanetMap {
         }
 
         this.maps.main = L.map(this.ids.main, options)
-        L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.{ext}', {
-            subdomains: 'abcd',
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.{ext}', {
             minZoom: 0,
             maxZoom: 20,
             ext: 'png'
@@ -130,11 +130,13 @@ export class WoeplanetMap {
         if (!isEmptyObject(this.config.bounds)) {
             console.log('set main map to bounds')
             this.maps.main.fitBounds(this.config.bounds)
+            this.drawGeometry(this.maps.main)
             this.openPopup()
             this.syncMaps()
         } else if (this.config.centroid) {
             console.log('set main map to centroid')
             this.maps.main.setView(this.config.centroid, this.config.zoom)
+            this.drawGeometry(this.maps.main)
             this.openPopup()
             this.syncMaps()
         } else {
@@ -143,6 +145,24 @@ export class WoeplanetMap {
                 this.openPopup()
                 this.syncMaps()
             })
+        }
+    }
+
+    drawGeometry(map) {
+        if (isEmptyObject(this.config.geojson)) return
+
+        const style = {
+            color: '#6000DB',
+            weight: 4,
+            opacity: 1,
+            fillColor: '#6000DB',
+            fillOpacity: 0.35
+        }
+
+        try {
+            L.geoJSON(this.config.geojson, { style }).addTo(map)
+        } catch (error) {
+            console.error('Failed to draw geometry:', error)
         }
     }
 
