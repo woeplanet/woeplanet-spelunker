@@ -11,7 +11,7 @@ from starlette.responses import HTMLResponse
 
 from woeplanet.spelunker.common.languages import language_name
 from woeplanet.spelunker.common.pagination import build_offset_pagination_context
-from woeplanet.spelunker.common.path_params import get_woeid
+from woeplanet.spelunker.common.path_params import get_path_woeid
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_nearby_params, parse_pagination
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
 from woeplanet.spelunker.config.placetypes import placetype_by_id
@@ -25,7 +25,7 @@ async def place_endpoint(request: Request) -> HTMLResponse:
     Place page endpoint
     """
 
-    woeid = get_woeid(request=request)
+    woeid = get_path_woeid(request=request)
 
     async with get_db(request=request) as db:
         filters = PlaceFilters(
@@ -95,7 +95,7 @@ async def place_map_endpoint(request: Request) -> HTMLResponse:
     Place map page endpoint
     """
 
-    woeid = get_woeid(request=request)
+    woeid = get_path_woeid(request=request)
 
     async with get_db(request=request) as db:
         filters = PlaceFilters(
@@ -185,7 +185,7 @@ async def place_nearby_endpoint(request: Request) -> HTMLResponse:
     Place nearby page endpoint - finds places near a given WOE ID's centroid
     """
 
-    woeid = get_woeid(request=request)
+    woeid = get_path_woeid(request=request)
     nearby_params = parse_nearby_params(request)
     filter_params = parse_filter_params(request)
     pagination = parse_pagination(request)

@@ -11,6 +11,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from woeplanet.spelunker.common.pagination import build_pagination_context
+from woeplanet.spelunker.common.path_params import get_path_placetype
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
 from woeplanet.spelunker.config.placetypes import placetype_by_shortname
@@ -75,7 +76,7 @@ async def placetype_search_endpoint(request: Request) -> HTMLResponse:
     Placetype page endpoint
     """
 
-    shortname = request.path_params['placetype']
+    shortname = get_path_placetype(request)
     parsed = parse_filter_params(request)
     pagination = parse_pagination(request)
 

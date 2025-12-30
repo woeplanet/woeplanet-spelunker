@@ -10,10 +10,12 @@ from starlette.exceptions import HTTPException
 
 from woeplanet.spelunker.common.path_params import (
     MAX_WOEID,
-    get_iso_country_code,
-    get_placetype,
-    get_woeid,
+    get_path_iso_code,
+    get_path_placetype,
+    get_path_woeid,
 )
+
+WOEID_LONDON = 44418
 
 
 class TestGetWoeid:
@@ -27,8 +29,8 @@ class TestGetWoeid:
         """
 
         request = MagicMock()
-        request.path_params = {'woeid': 44418}
-        assert get_woeid(request) == 44418
+        request.path_params = {'woeid': WOEID_LONDON}
+        assert get_path_woeid(request) == WOEID_LONDON
 
     def test_missing_woeid_raises(self) -> None:
         """
@@ -39,7 +41,7 @@ class TestGetWoeid:
         request.path_params = {}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_woeid(request)
+            get_path_woeid(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -52,7 +54,7 @@ class TestGetWoeid:
         request.path_params = {'woeid': -1}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_woeid(request)
+            get_path_woeid(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -65,7 +67,7 @@ class TestGetWoeid:
         request.path_params = {'woeid': 0}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_woeid(request)
+            get_path_woeid(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -78,7 +80,7 @@ class TestGetWoeid:
         request.path_params = {'woeid': MAX_WOEID + 1}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_woeid(request)
+            get_path_woeid(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -95,7 +97,7 @@ class TestGetIsoCountryCode:
 
         request = MagicMock()
         request.path_params = {'iso': 'GB'}
-        assert get_iso_country_code(request) == 'GB'
+        assert get_path_iso_code(request) == 'GB'
 
     def test_valid_iso_lowercase_converted(self) -> None:
         """
@@ -104,7 +106,7 @@ class TestGetIsoCountryCode:
 
         request = MagicMock()
         request.path_params = {'iso': 'gb'}
-        assert get_iso_country_code(request) == 'GB'
+        assert get_path_iso_code(request) == 'GB'
 
     def test_missing_iso_raises(self) -> None:
         """
@@ -115,7 +117,7 @@ class TestGetIsoCountryCode:
         request.path_params = {}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_iso_country_code(request)
+            get_path_iso_code(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -128,7 +130,7 @@ class TestGetIsoCountryCode:
         request.path_params = {'iso': 'GBR'}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_iso_country_code(request)
+            get_path_iso_code(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -145,7 +147,7 @@ class TestGetPlacetype:
 
         request = MagicMock()
         request.path_params = {'placetype': 'town'}
-        assert get_placetype(request) == 'town'
+        assert get_path_placetype(request) == 'town'
 
     def test_missing_placetype_raises(self) -> None:
         """
@@ -156,7 +158,7 @@ class TestGetPlacetype:
         request.path_params = {}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_placetype(request)
+            get_path_placetype(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
 
@@ -169,7 +171,6 @@ class TestGetPlacetype:
         request.path_params = {'placetype': ''}
 
         with pytest.raises(HTTPException) as exc_info:
-            get_placetype(request)
+            get_path_placetype(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
-

@@ -60,4 +60,3 @@ class TestLanguageName:
         """
 
         assert language_name(code) == expected
-

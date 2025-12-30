@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
 from woeplanet.spelunker.common.pagination import build_pagination_context
+from woeplanet.spelunker.common.path_params import get_path_iso_code
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
 from woeplanet.spelunker.dependencies.database import get_db
@@ -60,7 +61,7 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
     Country page endpoint
     """
 
-    iso = request.path_params['iso']
+    iso = get_path_iso_code(request)
     placetype = request.query_params.get('placetype')
     parsed = parse_filter_params(request)
     pagination = parse_pagination(request)

@@ -13,6 +13,31 @@ from woeplanet.spelunker.common.pagination import (
 from woeplanet.spelunker.common.query_params import PaginationParams
 from woeplanet.spelunker.dependencies.database import PaginatedResult
 
+DEFAULT_LIMIT = 10
+FIRST_PAGE = 1
+SECOND_PAGE = 2
+THIRD_PAGE = 3
+FOURTH_PAGE = 4
+FIFTH_PAGE = 5
+TENTH_PAGE = 10
+
+TOTAL_ZERO = 0
+TOTAL_FIFTY = 50
+TOTAL_NINETY_FIVE = 95
+TOTAL_HUNDRED = 100
+
+EXPECTED_PAGES_TEN = 10
+
+WOE_ID_FIRST = 1
+WOE_ID_SECOND = 2
+WOE_ID_TEN = 10
+WOE_ID_TWENTY = 20
+WOE_ID_EIGHTY = 80
+WOE_ID_NINETY = 90
+WOE_ID_HUNDRED = 100
+
+CURSOR_AFTER_FIVE = 5
+
 
 def make_request(url: str = 'http://test/path') -> MagicMock:
     """
@@ -36,14 +61,14 @@ class TestBuildPaginationContext:
 
         request = make_request()
         result = PaginatedResult(items=[], has_more=False)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=1)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIRST_PAGE)
 
-        context = build_pagination_context(request, result, pagination=pagination, total=0)
+        context = build_pagination_context(request, result, pagination=pagination, total=TOTAL_ZERO)
 
         assert context.urls.prev is None
         assert context.urls.next is None
-        assert context.page == 1
-        assert context.pages == 1
+        assert context.page == FIRST_PAGE
+        assert context.pages == FIRST_PAGE
 
     def test_first_page_no_prev(self) -> None:
         """
@@ -51,14 +76,17 @@ class TestBuildPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 1}, {'woe_id': 2}], has_more=True)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=1)
+        result = PaginatedResult(
+            items=[{'woe_id': WOE_ID_FIRST}, {'woe_id': WOE_ID_SECOND}],
+            has_more=True,
+        )
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIRST_PAGE)
 
-        context = build_pagination_context(request, result, pagination=pagination, total=100)
+        context = build_pagination_context(request, result, pagination=pagination, total=TOTAL_HUNDRED)
 
         assert context.urls.prev is None
         assert context.urls.next is not None
-        assert 'after=2' in context.urls.next
+        assert f'after={WOE_ID_SECOND}' in context.urls.next
 
     def test_middle_page_has_both_urls(self) -> None:
         """
@@ -66,15 +94,23 @@ class TestBuildPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 10}, {'woe_id': 20}], has_more=True)
-        pagination = PaginationParams(after=5, before=None, limit=10, page=2)
+        result = PaginatedResult(
+            items=[{'woe_id': WOE_ID_TEN}, {'woe_id': WOE_ID_TWENTY}],
+            has_more=True,
+        )
+        pagination = PaginationParams(
+            after=CURSOR_AFTER_FIVE,
+            before=None,
+            limit=DEFAULT_LIMIT,
+            page=SECOND_PAGE,
+        )
 
-        context = build_pagination_context(request, result, pagination=pagination, total=100)
+        context = build_pagination_context(request, result, pagination=pagination, total=TOTAL_HUNDRED)
 
         assert context.urls.prev is not None
         assert context.urls.next is not None
-        assert 'before=10' in context.urls.prev
-        assert 'after=20' in context.urls.next
+        assert f'before={WOE_ID_TEN}' in context.urls.prev
+        assert f'after={WOE_ID_TWENTY}' in context.urls.next
 
     def test_last_page_no_next(self) -> None:
         """
@@ -82,10 +118,18 @@ class TestBuildPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 90}, {'woe_id': 100}], has_more=False)
-        pagination = PaginationParams(after=80, before=None, limit=10, page=10)
+        result = PaginatedResult(
+            items=[{'woe_id': WOE_ID_NINETY}, {'woe_id': WOE_ID_HUNDRED}],
+            has_more=False,
+        )
+        pagination = PaginationParams(
+            after=WOE_ID_EIGHTY,
+            before=None,
+            limit=DEFAULT_LIMIT,
+            page=TENTH_PAGE,
+        )
 
-        context = build_pagination_context(request, result, pagination=pagination, total=100)
+        context = build_pagination_context(request, result, pagination=pagination, total=TOTAL_HUNDRED)
 
         assert context.urls.prev is not None
         assert context.urls.next is None
@@ -96,12 +140,12 @@ class TestBuildPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 1}], has_more=True)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=1)
+        result = PaginatedResult(items=[{'woe_id': WOE_ID_FIRST}], has_more=True)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIRST_PAGE)
 
-        context = build_pagination_context(request, result, pagination=pagination, total=95)
+        context = build_pagination_context(request, result, pagination=pagination, total=TOTAL_NINETY_FIVE)
 
-        assert context.pages == 10
+        assert context.pages == EXPECTED_PAGES_TEN
 
 
 class TestBuildOffsetPaginationContext:
@@ -116,9 +160,9 @@ class TestBuildOffsetPaginationContext:
 
         request = make_request()
         result = PaginatedResult(items=[], has_more=False)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=1)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIRST_PAGE)
 
-        context = build_offset_pagination_context(request, result, pagination=pagination, total=0)
+        context = build_offset_pagination_context(request, result, pagination=pagination, total=TOTAL_ZERO)
 
         assert context.urls.prev is None
         assert context.urls.next is None
@@ -129,14 +173,14 @@ class TestBuildOffsetPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 1}], has_more=True)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=1)
+        result = PaginatedResult(items=[{'woe_id': WOE_ID_FIRST}], has_more=True)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIRST_PAGE)
 
-        context = build_offset_pagination_context(request, result, pagination=pagination, total=50)
+        context = build_offset_pagination_context(request, result, pagination=pagination, total=TOTAL_FIFTY)
 
         assert context.urls.prev is None
         assert context.urls.next is not None
-        assert 'page=2' in context.urls.next
+        assert f'page={SECOND_PAGE}' in context.urls.next
 
     def test_middle_page_has_both_urls(self) -> None:
         """
@@ -144,15 +188,15 @@ class TestBuildOffsetPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 1}], has_more=True)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=3)
+        result = PaginatedResult(items=[{'woe_id': WOE_ID_FIRST}], has_more=True)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=THIRD_PAGE)
 
-        context = build_offset_pagination_context(request, result, pagination=pagination, total=50)
+        context = build_offset_pagination_context(request, result, pagination=pagination, total=TOTAL_FIFTY)
 
         assert context.urls.prev is not None
         assert context.urls.next is not None
-        assert 'page=2' in context.urls.prev
-        assert 'page=4' in context.urls.next
+        assert f'page={SECOND_PAGE}' in context.urls.prev
+        assert f'page={FOURTH_PAGE}' in context.urls.next
 
     def test_last_page_no_next(self) -> None:
         """
@@ -160,11 +204,10 @@ class TestBuildOffsetPaginationContext:
         """
 
         request = make_request()
-        result = PaginatedResult(items=[{'woe_id': 1}], has_more=False)
-        pagination = PaginationParams(after=None, before=None, limit=10, page=5)
+        result = PaginatedResult(items=[{'woe_id': WOE_ID_FIRST}], has_more=False)
+        pagination = PaginationParams(after=None, before=None, limit=DEFAULT_LIMIT, page=FIFTH_PAGE)
 
-        context = build_offset_pagination_context(request, result, pagination=pagination, total=50)
+        context = build_offset_pagination_context(request, result, pagination=pagination, total=TOTAL_FIFTY)
 
         assert context.urls.prev is not None
         assert context.urls.next is None
-

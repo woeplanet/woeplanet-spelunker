@@ -26,7 +26,7 @@ _iso_adapter = TypeAdapter(IsoCountryCodeType)
 _placetype_adapter = TypeAdapter(PlacetypeType)
 
 
-def get_woeid(request: Request) -> int:
+def get_path_woeid(request: Request) -> int:
     """
     Get a WOEID from the path
     """
@@ -42,7 +42,7 @@ def get_woeid(request: Request) -> int:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=WOEID_INVALID) from exc
 
 
-def get_iso_country_code(request: Request) -> str:
+def get_path_iso_code(request: Request) -> str:
     """
     Get an ISO 3166-1 alpha-2 country code from the path
     """
@@ -58,7 +58,7 @@ def get_iso_country_code(request: Request) -> str:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=ISO_INVALID) from exc
 
 
-def get_placetype(request: Request) -> str:
+def get_path_placetype(request: Request) -> str:
     """
     Get a short form placetype name from the path
     """

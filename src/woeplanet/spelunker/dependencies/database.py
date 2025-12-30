@@ -533,17 +533,17 @@ class Database:
 
     async def get_country_by_iso(self, iso: str) -> dict[str, Any] | None:
         """
-        Get a country by ISO code (2 or 3 letter)
+        Get a country by ISO 3166-1 alpha-2 code.
         """
 
         iso_upper = iso.upper()
         query = """
             SELECT woe_id, name, iso2, iso3
             FROM countries
-            WHERE UPPER(iso2) = ? OR UPPER(iso3) = ?
+            WHERE UPPER(iso2) = ?
         """
-        logger.debug('%s - %s', query, (iso_upper, iso_upper))
-        cursor = await self._conn.execute(query, (iso_upper, iso_upper))
+        logger.debug('%s - %s', query, (iso_upper,))
+        cursor = await self._conn.execute(query, (iso_upper,))
         row = await cursor.fetchone()
         return dict(row) if row else None
 

@@ -86,4 +86,3 @@ class TestSanitiseNameSearchQuery:
         """
 
         assert sanitise_name_search_query(query) == expected
-

@@ -18,6 +18,7 @@ VALID_COUNTRY_INCLUDES = frozenset({'deprecated', 'unknown', 'nullisland'})
 LIMIT_DEFAULT = 10
 LIMIT_MAX = 100
 MAX_QUERY_LENGTH = 255
+MAX_NEARBY_DISTANCE = 100_000
 
 NameType = Literal['any', 'S', 'P', 'V', 'Q', 'A', 'woeid']
 
@@ -29,6 +30,27 @@ class SearchParams(BaseModel):
 
     q: Annotated[str, Field(max_length=MAX_QUERY_LENGTH)] = ''
     name_type: NameType = 'any'
+
+
+class NearbyParamsModel(BaseModel):
+    """
+    Nearby query parameters with validation.
+    """
+
+    lat: Annotated[float, Field(ge=-90, le=90)] | None = None
+    lng: Annotated[float, Field(ge=-180, le=180)] | None = None
+    distance: Annotated[int, Field(gt=0, le=MAX_NEARBY_DISTANCE)] | None = None
+
+
+class PaginationParamsModel(BaseModel):
+    """
+    Pagination query parameters with validation.
+    """
+
+    after: Annotated[int, Field(gt=0)] | None = None
+    before: Annotated[int, Field(gt=0)] | None = None
+    limit: Annotated[int, Field(gt=0)] | None = None
+    page: Annotated[int, Field(gt=0)] | None = None
 
 
 @dataclass
@@ -67,19 +89,32 @@ class NearbyParams:
 
 def parse_nearby_params(request: Request) -> NearbyParams:
     """
-    Parse nearby query params.
+    Parse and validate nearby query params.
     """
-
-    lat = request.query_params.get('lat')
-    lng = request.query_params.get('lng')
-    distance = request.query_params.get('distance')
 
     settings = get_settings()
 
+    try:
+        validated = NearbyParamsModel(
+            lat=request.query_params.get('lat'),
+            lng=request.query_params.get('lng'),
+            distance=request.query_params.get('distance'),
+        )
+    except ValidationError as exc:
+        errors = exc.errors()
+        if errors:
+            msg = errors[0].get('msg', 'Invalid nearby parameters')
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=msg) from exc
+
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Invalid nearby parameters',
+        ) from exc
+
     return NearbyParams(
-        lat=float(lat) if lat else None,
-        lng=float(lng) if lng else None,
-        distance=int(distance) if distance else settings.nearby_distance,
+        lat=validated.lat,
+        lng=validated.lng,
+        distance=validated.distance if validated.distance else settings.nearby_distance,
     )
 
 
@@ -108,19 +143,32 @@ def parse_filter_params(request: Request) -> FilterParams:
 
 def parse_pagination(request: Request) -> PaginationParams:
     """
-    Parse pagination query params.
+    Parse and validate pagination query params.
     """
 
-    after = request.query_params.get('after')
-    before = request.query_params.get('before')
-    limit = request.query_params.get('limit')
-    page = request.query_params.get('page')
+    try:
+        validated = PaginationParamsModel(
+            after=request.query_params.get('after'),
+            before=request.query_params.get('before'),
+            limit=request.query_params.get('limit'),
+            page=request.query_params.get('page'),
+        )
+    except ValidationError as exc:
+        errors = exc.errors()
+        if errors:
+            msg = errors[0].get('msg', 'Invalid pagination parameters')
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=msg) from exc
+
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Invalid pagination parameters',
+        ) from exc
 
     return PaginationParams(
-        after=int(after) if after else None,
-        before=int(before) if before else None,
-        limit=min(int(limit) if limit else LIMIT_DEFAULT, LIMIT_MAX),
-        page=int(page) if page else 1,
+        after=validated.after,
+        before=validated.before,
+        limit=min(validated.limit, LIMIT_MAX) if validated.limit else LIMIT_DEFAULT,
+        page=validated.page if validated.page else 1,
     )
 
 

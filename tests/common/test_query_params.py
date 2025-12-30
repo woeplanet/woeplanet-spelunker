@@ -18,6 +18,13 @@ from woeplanet.spelunker.common.query_params import (
     parse_search_params,
 )
 
+FIRST_PAGE = 1
+FIFTH_PAGE = 5
+CUSTOM_LIMIT = 25
+CURSOR_AFTER = 1000
+CURSOR_BEFORE = 2000
+CUSTOM_DISTANCE = 10000
+
 
 class TestParseFilterParams:
     """
@@ -112,7 +119,7 @@ class TestParsePagination:
         assert result.after is None
         assert result.before is None
         assert result.limit == LIMIT_DEFAULT
-        assert result.page == 1
+        assert result.page == FIRST_PAGE
 
     def test_custom_limit(self) -> None:
         """
@@ -120,11 +127,11 @@ class TestParsePagination:
         """
 
         request = MagicMock()
-        request.query_params = QueryParams('limit=25')
+        request.query_params = QueryParams(f'limit={CUSTOM_LIMIT}')
 
         result = parse_pagination(request)
 
-        assert result.limit == 25
+        assert result.limit == CUSTOM_LIMIT
 
     def test_limit_capped_at_max(self) -> None:
         """
@@ -144,11 +151,11 @@ class TestParsePagination:
         """
 
         request = MagicMock()
-        request.query_params = QueryParams('after=1000')
+        request.query_params = QueryParams(f'after={CURSOR_AFTER}')
 
         result = parse_pagination(request)
 
-        assert result.after == 1000
+        assert result.after == CURSOR_AFTER
 
     def test_before_cursor(self) -> None:
         """
@@ -156,11 +163,11 @@ class TestParsePagination:
         """
 
         request = MagicMock()
-        request.query_params = QueryParams('before=2000')
+        request.query_params = QueryParams(f'before={CURSOR_BEFORE}')
 
         result = parse_pagination(request)
 
-        assert result.before == 2000
+        assert result.before == CURSOR_BEFORE
 
     def test_page_number(self) -> None:
         """
@@ -168,11 +175,11 @@ class TestParsePagination:
         """
 
         request = MagicMock()
-        request.query_params = QueryParams('page=5')
+        request.query_params = QueryParams(f'page={FIFTH_PAGE}')
 
         result = parse_pagination(request)
 
-        assert result.page == 5
+        assert result.page == FIFTH_PAGE
 
 
 class TestParseNearbyParams:
@@ -212,11 +219,11 @@ class TestParseNearbyParams:
         """
 
         request = MagicMock()
-        request.query_params = QueryParams('lat=51.5&lng=-0.1&distance=10000')
+        request.query_params = QueryParams(f'lat=51.5&lng=-0.1&distance={CUSTOM_DISTANCE}')
 
         result = parse_nearby_params(request)
 
-        assert result.distance == 10000
+        assert result.distance == CUSTOM_DISTANCE
 
 
 class TestParseSearchParams:
@@ -297,4 +304,3 @@ class TestParseSearchParams:
             parse_search_params(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
-
