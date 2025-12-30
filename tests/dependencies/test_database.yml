@@ -1,0 +1,96 @@
+# Test data for database tests
+
+test_get_place_by_id_valid:
+  - id: london
+    woe_id: 44418
+    expected_name: London
+    expected_placetype_id: 7
+  - id: new_york
+    woe_id: 2459115
+    expected_name: New York
+    expected_placetype_id: 7
+  - id: united_kingdom
+    woe_id: 23424975
+    expected_name: United Kingdom
+    expected_placetype_id: 12
+  - id: earth
+    woe_id: 1
+    expected_name: Earth
+    expected_placetype_id: 19
+
+test_get_place_by_id_not_found:
+  - id: very_large_id
+    woe_id: 999999999
+  - id: negative_id
+    woe_id: -1
+
+test_get_country_by_iso_valid:
+  - id: united_kingdom
+    iso: GB
+    expected_name: United Kingdom
+  - id: united_states
+    iso: US
+    expected_name: United States
+  - id: lowercase
+    iso: gb
+    expected_name: United Kingdom
+
+test_get_country_by_iso_not_found:
+  - id: invalid_code
+    iso: XX
+  - id: alpha3_rejected
+    iso: GBR
+  - id: empty_string
+    iso: ""
+
+test_get_places_by_placetype:
+  - id: towns
+    placetype_id: 7
+    limit: 5
+  - id: countries
+    placetype_id: 12
+    limit: 10
+  - id: states
+    placetype_id: 8
+    limit: 3
+
+test_pagination_cursors:
+  - id: no_cursor
+    after: null
+    before: null
+    limit: 10
+  - id: after_cursor
+    after: 1000
+    before: null
+    limit: 10
+  - id: before_cursor
+    after: null
+    before: 50000
+    limit: 10
+  - id: custom_limit
+    after: null
+    before: null
+    limit: 25
+
+test_nearby_params:
+  - id: london_centre
+    lat: 51.5074
+    lng: -0.1278
+    distance: 5000
+  - id: new_york_centre
+    lat: 40.7128
+    lng: -74.0060
+    distance: 10000
+  - id: small_radius
+    lat: 51.5
+    lng: -0.1
+    distance: 1000
+
+test_fts_queries:
+  - id: simple_name
+    query: London
+  - id: partial_match
+    query: Lond*
+  - id: phrase
+    query: '"New York"'
+

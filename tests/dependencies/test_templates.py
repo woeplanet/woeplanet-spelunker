@@ -201,4 +201,3 @@ class TestNameTypeFilter:
 
         assert name_type_filter('X') == 'unknown'
         assert name_type_filter('') == 'unknown'
-

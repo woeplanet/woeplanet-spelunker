@@ -24,8 +24,13 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "mypy>=1.18.2",
+    "parametrize-from-file>=0.20.0",
     "pyproject-parser[cli]>=0.13.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.5",
     "yamllint>=1.37.1",
 ]
@@ -41,6 +46,10 @@ plugins = ['pydantic.mypy']
 
 [[tool.mypy.overrides]]
 module="aiosqlitepool"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module="parametrize_from_file"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
@@ -63,6 +72,14 @@ line-ending = "auto"
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = ["COM812", "D","LOG015", "Q", "TRY004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.uv.build-backend]
 module-name="woeplanet.spelunker"

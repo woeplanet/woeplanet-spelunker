@@ -60,15 +60,15 @@ lint: format check typing yamllint	## Run all linters on the code base
 
 .PHONY: format
 format:	## Prettify/format the code base
-	uv run ruff format src
+	uv run ruff format src tests
 
 .PHONY: check
 check:	## Run the linter on the code base
-	uv run ruff check src
+	uv run ruff check src tests
 
 .PHONY: typing
 typing:	## Statically type check the code base
-	uv run mypy src
+	uv run mypy src tests
 
 .PHONY: yamllint
 yamllint:	## Run yamllint
@@ -93,6 +93,18 @@ frontend-assets:	## Copy frontend assets (leaflet images, geojson)
 .PHONY: frontend-watch
 frontend-watch:	## Watch frontend SCSS for changes
 	(cd $(FRONTEND_DIR) && yarn watch:css)
+
+.PHONY: test
+test:	## Run tests
+	uv run pytest
+
+.PHONY: test-verbose
+test-verbose:	## Run tests with verbose output
+	uv run pytest -v
+
+.PHONY: coverage
+coverage:	## Run tests with coverage
+	uv run pytest --cov=src --cov-report=term-missing
 
 .PHONY: serve
 serve:	## Serve the application
