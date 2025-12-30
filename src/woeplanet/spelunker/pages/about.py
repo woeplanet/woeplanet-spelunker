@@ -1,37 +1,16 @@
 """
-WOEplanet Spelunker: pages package; about page module
+WOEplanet Spelunker: pages package; about page module.
 """
-
-import logging
 
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
-from woeplanet.spelunker.config.place_scale import placetype_to_scale
-from woeplanet.spelunker.dependencies.templates import get_templater
-from woeplanet.spelunker.pages.random import _random_place
-
-logger = logging.getLogger(__name__)
+from woeplanet.spelunker.pages.page import render_page
 
 
 async def about_endpoint(request: Request) -> HTMLResponse:
     """
-    About page endpoint
+    About page endpoint.
     """
 
-    place = await _random_place(request=request)
-    template = get_templater().get_template('about.html.j2')
-    template_args = {
-        'map': True,
-        'centroid': place.get('centroid'),
-        'bounds': place.get('bounds'),
-        'title': 'About',
-        'woeid': place.get('woe_id'),
-        'iso': place.get('iso', 'GB'),
-        'nearby': place.get('woe_id'),
-        'name': place.get('name'),
-        'scale': placetype_to_scale(int(place.get('placetype_id', 0))),
-        'doc': place,
-    }
-    content = await template.render_async(request=request, **template_args)
-    return HTMLResponse(content)
+    return await render_page(request=request, template_name='about.html.j2', title='About')
