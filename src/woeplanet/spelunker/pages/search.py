@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 
+from woeplanet.spelunker.common.coordinates import extract_coordinates
 from woeplanet.spelunker.common.fts import sanitise_name_search_query
 from woeplanet.spelunker.common.pagination import build_pagination_context
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination, parse_search_params
@@ -84,11 +85,8 @@ async def _do_name_search(request: Request, q: str, name_type: str) -> HTMLRespo
 
     paging = build_pagination_context(request, result, pagination=pagination, total=total)
 
-    centroid = None
-    bounds = None
     place = result.items[0] if result.items else None
-    if place and place.get('lat') and place.get('lng'):
-        centroid = [place['lat'], place['lng']]
+    coords = extract_coordinates(place)
 
     template = get_templater().get_template('search-results.html.j2')
     template_args = {
@@ -99,9 +97,9 @@ async def _do_name_search(request: Request, q: str, name_type: str) -> HTMLRespo
         'total': total,
         'includes': parsed.includes,
         'includes_qs': parsed.query_string,
-        'map': bool(centroid),
-        'centroid': centroid,
-        'bounds': bounds,
+        'map': bool(coords.centroid),
+        'centroid': coords.centroid,
+        'bounds': coords.bounds,
         'woeid': place['woe_id'] if place else None,
         'name': place['name'] if place else None,
         'scale': placetype_to_scale(12),

@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
+from woeplanet.spelunker.common.coordinates import extract_coordinates
 from woeplanet.spelunker.common.languages import language_name
 from woeplanet.spelunker.common.pagination import build_offset_pagination_context
 from woeplanet.spelunker.common.path_params import get_path_woeid
@@ -46,13 +47,7 @@ async def place_endpoint(request: Request) -> HTMLResponse:
         if not place:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f'Place with woeid {woeid} not found')
 
-        centroid = None
-        if place.get('lat') and place.get('lng'):
-            centroid = [place.get('lat'), place.get('lng')]
-        bounds = None
-        if place.get('sw_lat') and place.get('sw_lng') and place.get('ne_lat') and place.get('ne_lng'):
-            bounds = [[place.get('sw_lat'), place.get('sw_lng')], [place.get('ne_lat'), place.get('ne_lng')]]
-
+        coords = extract_coordinates(place)
         name = place.get('name')
         placetype_id = int(place.get('placetype_id', 0))
         template = get_templater().get_template('place.html.j2')
@@ -76,8 +71,8 @@ async def place_endpoint(request: Request) -> HTMLResponse:
 
         template_args = {
             'map': True,
-            'centroid': centroid,
-            'bounds': bounds,
+            'centroid': coords.centroid,
+            'bounds': coords.bounds,
             'title': f'WOEID {woeid} ({name if name else "Unknown"})',
             'woeid': place.get('woe_id'),
             'name': place.get('name'),
@@ -118,13 +113,7 @@ async def place_map_endpoint(request: Request) -> HTMLResponse:
         if not place:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f'Place with woeid {woeid} not found')
 
-        centroid = None
-        if place.get('lat') and place.get('lng'):
-            centroid = [place.get('lat'), place.get('lng')]
-        bounds = None
-        if place.get('sw_lat') and place.get('sw_lng') and place.get('ne_lat') and place.get('ne_lng'):
-            bounds = [[place.get('sw_lat'), place.get('sw_lng')], [place.get('ne_lat'), place.get('ne_lng')]]
-
+        coords = extract_coordinates(place)
         geom = place.get('geom')
         geojson = None
         if geom:
@@ -137,9 +126,9 @@ async def place_map_endpoint(request: Request) -> HTMLResponse:
                 },
                 'geometry': json.loads(geom) if isinstance(geom, str) else geom,
             }
-        elif bounds:
-            sw_lat, sw_lng = bounds[0]
-            ne_lat, ne_lng = bounds[1]
+        elif coords.bounds:
+            sw_lat, sw_lng = coords.bounds[0]
+            ne_lat, ne_lng = coords.bounds[1]
             geojson = {
                 'type': 'Feature',
                 'properties': {
@@ -167,8 +156,8 @@ async def place_map_endpoint(request: Request) -> HTMLResponse:
 
         template_args = {
             'map': True,
-            'centroid': centroid,
-            'bounds': bounds,
+            'centroid': coords.centroid,
+            'bounds': coords.bounds,
             'geojson': json.dumps(geojson) if geojson else None,
             'title': f'Map: {name if name else "Unknown"} ({woeid})',
             'woeid': place.get('woe_id'),

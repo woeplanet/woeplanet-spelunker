@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
+from woeplanet.spelunker.common.coordinates import extract_coordinates
 from woeplanet.spelunker.common.pagination import build_pagination_context
 from woeplanet.spelunker.common.path_params import get_path_iso_code
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination
@@ -93,14 +94,8 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
 
     paging = build_pagination_context(request, result, pagination=pagination, total=total)
 
-    centroid = None
-    bounds = None
     place = result.items[0] if result.items else None
-    if place:
-        if place.get('lat') and place.get('lng'):
-            centroid = [place['lat'], place['lng']]
-        if place.get('sw_lat') and place.get('sw_lng') and place.get('ne_lat') and place.get('ne_lng'):
-            bounds = [[place['sw_lat'], place['sw_lng']], [place['ne_lat'], place['ne_lng']]]
+    coords = extract_coordinates(place)
 
     title = f'Country: {country["name"]} ({country["iso2"]})'
     if placetype:
@@ -116,8 +111,8 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
         'includes': parsed.includes,
         'includes_qs': parsed.query_string,
         'map': True,
-        'centroid': centroid,
-        'bounds': bounds,
+        'centroid': coords.centroid,
+        'bounds': coords.bounds,
         'woeid': place['woe_id'] if place else None,
         'name': place['name'] if place else None,
         'scale': placetype_to_scale(12),

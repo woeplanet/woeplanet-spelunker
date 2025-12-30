@@ -1,5 +1,5 @@
 """
-WOEplanet Spelunker: pages package; random page module
+WOEplanet Spelunker: pages package; random page module.
 """
 
 from http import HTTPStatus
@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
+from woeplanet.spelunker.common.coordinates import extract_coordinates
 from woeplanet.spelunker.dependencies.database import PlaceFilters, get_db
 
 
@@ -63,14 +64,8 @@ async def _random_place(request: Request) -> dict[str, Any]:
                 detail=f'Failed to get place by id {random_place["woe_id"]}',
             )
 
-        centroid = None
-        if place.get('lat') and place.get('lng'):
-            centroid = [place.get('lat'), place.get('lng')]
-        bounds = None
-        if place.get('sw_lat') and place.get('sw_lng') and place.get('ne_lat') and place.get('ne_lng'):
-            bounds = [[place.get('sw_lat'), place.get('sw_lng')], [place.get('ne_lat'), place.get('ne_lng')]]
-
-        place['centroid'] = centroid
-        place['bounds'] = bounds
+        coords = extract_coordinates(place)
+        place['centroid'] = coords.centroid
+        place['bounds'] = coords.bounds
 
         return place
