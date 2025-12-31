@@ -2,6 +2,7 @@
 WOEplanet Spelunker: tests package; pytest fixtures.
 """
 
+import gc
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
@@ -19,6 +20,7 @@ def client() -> Iterator[TestClient]:
 
     with TestClient(app) as client:
         yield client
+    gc.collect()
 
 
 @pytest.fixture

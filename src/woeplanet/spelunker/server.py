@@ -7,10 +7,12 @@ from http import HTTPStatus
 
 import uvicorn
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
 
 from woeplanet.spelunker.config.settings import get_settings
 from woeplanet.spelunker.handlers.exceptions import client_error_handler, server_error_handler
 from woeplanet.spelunker.handlers.lifespan import lifespan
+from woeplanet.spelunker.middleware.timing import TimingMiddleware
 from woeplanet.spelunker.routers.routes import routes
 
 settings = get_settings()
@@ -19,11 +21,15 @@ handlers = {
     HTTPStatus.NOT_FOUND.value: client_error_handler,
     HTTPStatus.INTERNAL_SERVER_ERROR.value: server_error_handler,
 }
+middleware = [
+    Middleware(TimingMiddleware),  # type: ignore[arg-type]
+]
 app = Starlette(
     debug=settings.log_level == 'debug',
     routes=routes(),
     exception_handlers=handlers,  # type: ignore[arg-type]
     lifespan=lifespan,
+    middleware=middleware,
 )
 
 
