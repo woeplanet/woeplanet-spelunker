@@ -135,6 +135,76 @@ class Database:
         self._conn = conn
         self._conn.row_factory = aiosqlite.Row
 
+    async def _do_pagination_query(  # noqa: PLR0913
+        self,
+        select_cols: list[str],
+        joins: list[str],
+        where_clauses: list[str],
+        params: list[Any],
+        *,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int = 50,
+    ) -> PaginatedResult:
+        """
+        Execute a keyset-paginated query on places table.
+        """
+
+        if before:
+            where_clauses.append('p.woe_id < ?')
+            params.append(before)
+            order = 'DESC'
+        elif after:
+            where_clauses.append('p.woe_id > ?')
+            params.append(after)
+            order = 'ASC'
+        else:
+            order = 'ASC'
+
+        params.append(limit + 1)
+
+        query = f"""
+            SELECT {', '.join(select_cols)}
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+            ORDER BY p.woe_id {order}
+            LIMIT ?
+        """  # noqa: S608
+
+        logger.debug('%s - %s', query, params)
+        cursor = await self._conn.execute(query, params)
+        rows = [dict(r) for r in await cursor.fetchall()]
+
+        has_more = len(rows) > limit
+        items = rows[:limit]
+
+        if before:
+            items = items[::-1]
+
+        return PaginatedResult(items=items, has_more=has_more)
+
+    async def _do_count_query(
+        self,
+        joins: list[str],
+        where_clauses: list[str],
+        params: list[Any],
+    ) -> int:
+        """
+        Execute a count query on places table.
+        """
+
+        query = f"""
+            SELECT COUNT(*)
+            FROM places p
+            {' '.join(joins)}
+            WHERE {' AND '.join(where_clauses)}
+        """  # noqa: S608
+
+        cursor = await self._conn.execute(query, params)
+        row = await cursor.fetchone()
+        return row[0] if row else 0
+
     async def get_place_by_id(  # noqa: C901, PLR0912, PLR0915
         self, woe_id: int, filters: PlaceFilters
     ) -> dict[str, Any] | None:
@@ -441,6 +511,21 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    def _build_placetype_query(
+        self, placetype_id: int, *, include_geometry: bool = True
+    ) -> tuple[list[str], list[str], list[Any], FilterOptions]:
+        """
+        Build query parts for placetype queries.
+        """
+
+        joins = ['JOIN placetypes pt ON p.placetype_id = pt.id']
+        if include_geometry:
+            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
+        where_clauses = ['p.placetype_id = ?']
+        params: list[Any] = [placetype_id]
+        opts = FilterOptions(geometry_join_exists=include_geometry, include_unknown=False)
+        return joins, where_clauses, params, opts
+
     async def get_places_by_placetype(
         self,
         placetype_id: int,
@@ -465,49 +550,12 @@ class Database:
             'g.ne_lat',
             'g.ne_lng',
         ]
-        joins = [
-            'JOIN placetypes pt ON p.placetype_id = pt.id',
-            'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
-        ]
-        where_clauses = ['p.placetype_id = ?']
-        params: list[Any] = [placetype_id]
-        apply_search_filters(
-            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_unknown=False)
+        joins, where_clauses, params, opts = self._build_placetype_query(placetype_id)
+        apply_search_filters(filters, joins, where_clauses, opts)
+
+        return await self._do_pagination_query(
+            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
-
-        if before:
-            where_clauses.append('p.woe_id < ?')
-            params.append(before)
-            order = 'DESC'
-        elif after:
-            where_clauses.append('p.woe_id > ?')
-            params.append(after)
-            order = 'ASC'
-        else:
-            order = 'ASC'
-
-        params.append(limit + 1)
-
-        query = f"""
-            SELECT {', '.join(select_cols)}
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-            ORDER BY p.woe_id {order}
-            LIMIT ?
-        """  # noqa: S608
-
-        logger.debug('%s - %s', query, params)
-        cursor = await self._conn.execute(query, params)
-        rows = [dict(r) for r in await cursor.fetchall()]
-
-        has_more = len(rows) > limit
-        items = rows[:limit]
-
-        if before:
-            items = items[::-1]
-
-        return PaginatedResult(items=items, has_more=has_more)
 
     async def get_places_by_placetype_count(
         self,
@@ -519,21 +567,10 @@ class Database:
         Get count of places for a placetype.
         """
 
-        joins: list[str] = []
-        where_clauses = ['p.placetype_id = ?']
-        params: list[Any] = [placetype_id]
-        apply_search_filters(filters, joins, where_clauses, FilterOptions(include_unknown=False))
+        joins, where_clauses, params, opts = self._build_placetype_query(placetype_id, include_geometry=False)
+        apply_search_filters(filters, joins, where_clauses, opts)
 
-        query = f"""
-            SELECT COUNT(*)
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-        """  # noqa: S608
-
-        cursor = await self._conn.execute(query, params)
-        row = await cursor.fetchone()
-        return row[0] if row else 0
+        return await self._do_count_query(joins, where_clauses, params)
 
     async def get_country_by_iso(self, iso: str) -> dict[str, Any] | None:
         """
@@ -550,6 +587,32 @@ class Database:
         cursor = await self._conn.execute(query, (iso_upper,))
         row = await cursor.fetchone()
         return dict(row) if row else None
+
+    def _build_country_query(
+        self,
+        country_woe_id: int,
+        placetype: str | None,
+        *,
+        include_geometry: bool = True,
+    ) -> tuple[list[str], list[str], list[Any], FilterOptions]:
+        """
+        Build query parts for country queries.
+        """
+
+        joins = ['JOIN admins a ON p.woe_id = a.woe_id']
+        if include_geometry:
+            joins.insert(0, 'JOIN placetypes pt ON p.placetype_id = pt.id')
+            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
+        where_clauses = ['a.country = ?']
+        params: list[Any] = [country_woe_id]
+
+        if placetype:
+            joins.append('JOIN placetypes pt_filter ON p.placetype_id = pt_filter.id')
+            where_clauses.append('LOWER(pt_filter.shortname) = ?')
+            params.append(placetype.lower())
+
+        opts = FilterOptions(geometry_join_exists=include_geometry)
+        return joins, where_clauses, params, opts
 
     async def get_places_by_country(  # noqa: PLR0913
         self,
@@ -576,54 +639,12 @@ class Database:
             'g.ne_lat',
             'g.ne_lng',
         ]
-        joins = [
-            'JOIN placetypes pt ON p.placetype_id = pt.id',
-            'JOIN admins a ON p.woe_id = a.woe_id',
-            'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
-        ]
-        where_clauses = ['a.country = ?']
-        params: list[Any] = [country_woe_id]
+        joins, where_clauses, params, opts = self._build_country_query(country_woe_id, placetype)
+        apply_search_filters(filters, joins, where_clauses, opts)
 
-        if placetype:
-            joins.append('JOIN placetypes pt_filter ON p.placetype_id = pt_filter.id')
-            where_clauses.append('LOWER(pt_filter.shortname) = ?')
-            params.append(placetype.lower())
-
-        apply_search_filters(filters, joins, where_clauses, FilterOptions(geometry_join_exists=True))
-
-        if before:
-            where_clauses.append('p.woe_id < ?')
-            params.append(before)
-            order = 'DESC'
-        elif after:
-            where_clauses.append('p.woe_id > ?')
-            params.append(after)
-            order = 'ASC'
-        else:
-            order = 'ASC'
-
-        params.append(limit + 1)
-
-        query = f"""
-            SELECT {', '.join(select_cols)}
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-            ORDER BY p.woe_id {order}
-            LIMIT ?
-        """  # noqa: S608
-
-        logger.debug('%s - %s', query, params)
-        cursor = await self._conn.execute(query, params)
-        rows = [dict(r) for r in await cursor.fetchall()]
-
-        has_more = len(rows) > limit
-        items = rows[:limit]
-
-        if before:
-            items = items[::-1]
-
-        return PaginatedResult(items=items, has_more=has_more)
+        return await self._do_pagination_query(
+            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
+        )
 
     async def get_places_by_country_count(
         self,
@@ -636,27 +657,12 @@ class Database:
         Get count of places for a country.
         """
 
-        joins = ['JOIN admins a ON p.woe_id = a.woe_id']
-        where_clauses = ['a.country = ?']
-        params: list[Any] = [country_woe_id]
+        joins, where_clauses, params, opts = self._build_country_query(
+            country_woe_id, placetype, include_geometry=False
+        )
+        apply_search_filters(filters, joins, where_clauses, opts)
 
-        if placetype:
-            joins.append('JOIN placetypes pt_filter ON p.placetype_id = pt_filter.id')
-            where_clauses.append('LOWER(pt_filter.shortname) = ?')
-            params.append(placetype.lower())
-
-        apply_search_filters(filters, joins, where_clauses)
-
-        query = f"""
-            SELECT COUNT(*)
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-        """  # noqa: S608
-
-        cursor = await self._conn.execute(query, params)
-        row = await cursor.fetchone()
-        return row[0] if row else 0
+        return await self._do_count_query(joins, where_clauses, params)
 
     async def get_placetypes_by_country(
         self,
@@ -697,6 +703,21 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    def _build_nullisland_query(
+        self, *, include_placetype: bool = True
+    ) -> tuple[list[str], list[str], list[Any], FilterOptions]:
+        """
+        Build query parts for null island queries.
+        """
+
+        joins = ['LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id']
+        if include_placetype:
+            joins.insert(0, 'JOIN placetypes pt ON p.placetype_id = pt.id')
+        where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
+        params: list[Any] = []
+        opts = FilterOptions(geometry_join_exists=True, include_null_island=False)
+        return joins, where_clauses, params, opts
+
     async def get_nullisland_places(
         self,
         *,
@@ -716,72 +737,22 @@ class Database:
             'g.lat',
             'g.lng',
         ]
-        joins = [
-            'JOIN placetypes pt ON p.placetype_id = pt.id',
-            'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
-        ]
-        where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
-        params: list[Any] = []
-        apply_search_filters(
-            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
+        joins, where_clauses, params, opts = self._build_nullisland_query()
+        apply_search_filters(filters, joins, where_clauses, opts)
+
+        return await self._do_pagination_query(
+            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
-
-        if before:
-            where_clauses.append('p.woe_id < ?')
-            params.append(before)
-            order = 'DESC'
-        elif after:
-            where_clauses.append('p.woe_id > ?')
-            params.append(after)
-            order = 'ASC'
-        else:
-            order = 'ASC'
-
-        params.append(limit + 1)
-
-        query = f"""
-            SELECT {', '.join(select_cols)}
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-            ORDER BY p.woe_id {order}
-            LIMIT ?
-        """  # noqa: S608
-
-        logger.debug('%s - %s', query, params)
-        cursor = await self._conn.execute(query, params)
-        rows = [dict(r) for r in await cursor.fetchall()]
-
-        has_more = len(rows) > limit
-        items = rows[:limit]
-
-        if before:
-            items = items[::-1]
-
-        return PaginatedResult(items=items, has_more=has_more)
 
     async def get_nullisland_places_count(self, *, filters: SearchFilters) -> int:
         """
         Get count of places that visit Null Island.
         """
 
-        joins = ['LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id']
-        where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
-        apply_search_filters(
-            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
-        )
+        joins, where_clauses, params, opts = self._build_nullisland_query(include_placetype=False)
+        apply_search_filters(filters, joins, where_clauses, opts)
 
-        query = f"""
-            SELECT COUNT(*)
-            FROM places p
-            {' '.join(joins)}
-            WHERE {' AND '.join(where_clauses)}
-        """  # noqa: S608
-
-        logger.debug('%s', query)
-        cursor = await self._conn.execute(query)
-        row = await cursor.fetchone()
-        return row[0] if row else 0
+        return await self._do_count_query(joins, where_clauses, params)
 
     async def get_nullisland_placetype_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
