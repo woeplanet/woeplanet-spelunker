@@ -80,6 +80,9 @@ ignore = ["COM812", "D","LOG015", "Q", "TRY004"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore:unclosed database:ResourceWarning",
+]
 
 [tool.uv.build-backend]
 module-name="woeplanet.spelunker"
