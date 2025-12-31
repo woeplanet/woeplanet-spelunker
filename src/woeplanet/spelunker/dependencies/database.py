@@ -58,6 +58,43 @@ class SearchFilters:
 
 
 @dataclass
+class FilterOptions:
+    """
+    Options for applying search filters to queries.
+    """
+
+    table_alias: str = 'p'
+    geometry_join_exists: bool = False
+    include_null_island: bool = True
+    include_unknown: bool = True
+
+
+def apply_search_filters(
+    filters: SearchFilters,
+    joins: list[str],
+    where_clauses: list[str],
+    options: FilterOptions | None = None,
+) -> None:
+    """
+    Apply search filters to query joins and where clauses.
+    """
+
+    opts = options or FilterOptions()
+
+    if not filters.deprecated:
+        joins.append(f'LEFT JOIN changes ch ON {opts.table_alias}.woe_id = ch.woe_id')
+        where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+
+    if opts.include_null_island and not filters.null_island:
+        if not opts.geometry_join_exists:
+            joins.append(f'LEFT JOIN geometries.geometries g ON {opts.table_alias}.woe_id = g.woe_id')
+        where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+
+    if opts.include_unknown and not filters.unknown:
+        where_clauses.append(f'{opts.table_alias}.placetype_id != 0')
+
+
+@dataclass
 class PaginatedResult:
     """
     Paginated query result.
@@ -353,18 +390,7 @@ class Database:
 
         joins: list[str] = []
         where_clauses: list[str] = []
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
-
+        apply_search_filters(filters, joins, where_clauses)
         where_sql = f'WHERE {" AND ".join(where_clauses)}' if where_clauses else ''
 
         query = f"""
@@ -394,18 +420,7 @@ class Database:
         logger.debug('get_placetype_facets: filters=%s', filters)
         joins = ['JOIN placetypes pt ON p.placetype_id = pt.id']
         where_clauses: list[str] = []
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
-
+        apply_search_filters(filters, joins, where_clauses)
         where_sql = f'WHERE {" AND ".join(where_clauses)}' if where_clauses else ''
 
         query = f"""
@@ -456,13 +471,9 @@ class Database:
         ]
         where_clauses = ['p.placetype_id = ?']
         params: list[Any] = [placetype_id]
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+        apply_search_filters(
+            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_unknown=False)
+        )
 
         if before:
             where_clauses.append('p.woe_id < ?')
@@ -511,14 +522,7 @@ class Database:
         joins: list[str] = []
         where_clauses = ['p.placetype_id = ?']
         params: list[Any] = [placetype_id]
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
+        apply_search_filters(filters, joins, where_clauses, FilterOptions(include_unknown=False))
 
         query = f"""
             SELECT COUNT(*)
@@ -585,15 +589,7 @@ class Database:
             where_clauses.append('LOWER(pt_filter.shortname) = ?')
             params.append(placetype.lower())
 
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(filters, joins, where_clauses, FilterOptions(geometry_join_exists=True))
 
         if before:
             where_clauses.append('p.woe_id < ?')
@@ -649,16 +645,7 @@ class Database:
             where_clauses.append('LOWER(pt_filter.shortname) = ?')
             params.append(placetype.lower())
 
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(filters, joins, where_clauses)
 
         query = f"""
             SELECT COUNT(*)
@@ -690,17 +677,7 @@ class Database:
         ]
         where_clauses = ['UPPER(c.iso2) = ?']
         params: list[Any] = [iso_upper]
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(filters, joins, where_clauses)
 
         query = f"""
             SELECT
@@ -745,13 +722,9 @@ class Database:
         ]
         where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
         params: list[Any] = []
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(
+            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
+        )
 
         if before:
             where_clauses.append('p.woe_id < ?')
@@ -794,13 +767,9 @@ class Database:
 
         joins = ['LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id']
         where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(
+            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
+        )
 
         query = f"""
             SELECT COUNT(*)
@@ -824,13 +793,9 @@ class Database:
             'LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id',
         ]
         where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(
+            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
+        )
 
         query = f"""
             SELECT
@@ -948,16 +913,7 @@ class Database:
             'LEFT JOIN countries c ON ad.country = c.woe_id',
         ]
         where_clauses = [f'p.woe_id IN ({placeholders})']
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(filters, joins, where_clauses, FilterOptions(geometry_join_exists=True))
 
         query = f"""
             SELECT
@@ -1001,15 +957,7 @@ class Database:
             where_clauses.append('a.name_type = ?')
             params.append(name_type)
 
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
-
-        if not filters.null_island:
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL)')
-
-        if not filters.unknown:
-            where_clauses.append('p.placetype_id != 0')
+        apply_search_filters(filters, joins, where_clauses, FilterOptions(geometry_join_exists=True))
 
         query = f"""
             SELECT COUNT(DISTINCT p.woe_id)
@@ -1121,10 +1069,12 @@ class Database:
             lng - lng_delta,
             lng + lng_delta,
         ]
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+        apply_search_filters(
+            filters,
+            joins,
+            where_clauses,
+            FilterOptions(geometry_join_exists=True, include_null_island=False, include_unknown=False),
+        )
 
         query = f"""
             WITH origin AS (SELECT MakePoint(?, ?, 4326) AS pt),
@@ -1189,10 +1139,12 @@ class Database:
             lng + lng_delta,
             distance,
         ]
-
-        if not filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
+        apply_search_filters(
+            filters,
+            joins,
+            where_clauses,
+            FilterOptions(geometry_join_exists=True, include_null_island=False, include_unknown=False),
+        )
 
         query = f"""
             WITH origin AS (SELECT MakePoint(?, ?, 4326) AS pt),
