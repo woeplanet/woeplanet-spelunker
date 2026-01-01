@@ -3,7 +3,6 @@ WOEplanet Spelunker: pages package; placetypes page module
 """
 
 import logging
-import time
 from http import HTTPStatus
 
 from starlette.exceptions import HTTPException
@@ -20,7 +19,6 @@ from woeplanet.spelunker.dependencies.database import get_db
 from woeplanet.spelunker.dependencies.templates import get_templater
 from woeplanet.spelunker.pages.random import _random_place
 
-# PROFILING: time import and perf_counter calls below are used for profiling
 logger = logging.getLogger(__name__)
 
 
@@ -29,24 +27,13 @@ async def placetype_facets_endpoint(request: Request) -> HTMLResponse:
     Placetypes page endpoint
     """
 
-    start_total = time.perf_counter()  # PROFILING
-
-    start = time.perf_counter()  # PROFILING
     place = await _random_place(request=request)
-    logger.info('_random_place: %.3fs', time.perf_counter() - start)  # PROFILING
-
     parsed = parse_filter_params(request)
 
     async with get_db(request=request) as db:
-        start = time.perf_counter()  # PROFILING
         total_woeids = await db.get_total_woeids(filters=parsed.filters)
-        logger.info('get_total_woeids: %.3fs', time.perf_counter() - start)  # PROFILING
-
-        start = time.perf_counter()  # PROFILING
         placetypes = await db.get_placetype_facets(filters=parsed.filters)
-        logger.info('get_placetype_facets: %.3fs', time.perf_counter() - start)  # PROFILING
 
-    start = time.perf_counter()  # PROFILING
     template = get_templater().get_template('placetypes.html.j2')
     template_args = {
         'total': {
@@ -66,9 +53,6 @@ async def placetype_facets_endpoint(request: Request) -> HTMLResponse:
         'placetypes': placetypes,
     }
     content = await template.render_async(request=request, **template_args)
-    logger.info('template render: %.3fs', time.perf_counter() - start)  # PROFILING
-
-    logger.info('placetype_facets_endpoint total: %.3fs', time.perf_counter() - start_total)  # PROFILING
     return HTMLResponse(content)
 
 

@@ -20,6 +20,7 @@ from starlette.requests import Request
 if TYPE_CHECKING:
     from starlette.applications import Starlette
 
+from woeplanet.spelunker.common.profiling import profile_async
 from woeplanet.spelunker.dependencies.cache import disk_cache
 
 logger = logging.getLogger(__name__)
@@ -205,6 +206,7 @@ class Database:
         row = await cursor.fetchone()
         return row[0] if row else 0
 
+    @profile_async
     async def get_place_by_id(  # noqa: C901, PLR0912, PLR0915
         self, woe_id: int, filters: PlaceFilters
     ) -> dict[str, Any] | None:
@@ -371,6 +373,7 @@ class Database:
 
         return grouped
 
+    @profile_async
     async def inflate_place_ids(self, woe_ids: list[int]) -> dict[str, list[dict[str, Any]]]:
         """
         Inflate WOEIDs into places grouped by placetype
@@ -412,6 +415,7 @@ class Database:
         return result
 
     @disk_cache(key_builder=_make_search_filter_cache_key('countries_facets'))
+    @profile_async
     async def get_countries_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get all countries with place counts
@@ -453,6 +457,7 @@ class Database:
         return [dict(row) for row in rows]
 
     @disk_cache(key_builder=_make_search_filter_cache_key('total_woeids'))
+    @profile_async
     async def get_total_woeids(self, *, filters: SearchFilters) -> int:
         """
         Get the total number of WOEIDs
@@ -482,6 +487,7 @@ class Database:
         return row[0]
 
     @disk_cache(key_builder=_make_search_filter_cache_key('placetypes_facets'))
+    @profile_async
     async def get_placetype_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get all placetypes with place counts
@@ -526,6 +532,7 @@ class Database:
         opts = FilterOptions(geometry_join_exists=include_geometry, include_unknown=False)
         return joins, where_clauses, params, opts
 
+    @profile_async
     async def get_places_by_placetype(
         self,
         placetype_id: int,
@@ -557,6 +564,7 @@ class Database:
             select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
 
+    @profile_async
     async def get_places_by_placetype_count(
         self,
         placetype_id: int,
@@ -572,6 +580,7 @@ class Database:
 
         return await self._do_count_query(joins, where_clauses, params)
 
+    @profile_async
     async def get_country_by_iso(self, iso: str) -> dict[str, Any] | None:
         """
         Get a country by ISO 3166-1 alpha-2 code.
@@ -614,6 +623,7 @@ class Database:
         opts = FilterOptions(geometry_join_exists=include_geometry)
         return joins, where_clauses, params, opts
 
+    @profile_async
     async def get_places_by_country(  # noqa: PLR0913
         self,
         country_woe_id: int,
@@ -646,6 +656,7 @@ class Database:
             select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
 
+    @profile_async
     async def get_places_by_country_count(
         self,
         country_woe_id: int,
@@ -664,6 +675,7 @@ class Database:
 
         return await self._do_count_query(joins, where_clauses, params)
 
+    @profile_async
     async def get_placetypes_by_country(
         self,
         iso2: str,
@@ -718,6 +730,7 @@ class Database:
         opts = FilterOptions(geometry_join_exists=True, include_null_island=False)
         return joins, where_clauses, params, opts
 
+    @profile_async
     async def get_nullisland_places(
         self,
         *,
@@ -744,6 +757,7 @@ class Database:
             select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
 
+    @profile_async
     async def get_nullisland_places_count(self, *, filters: SearchFilters) -> int:
         """
         Get count of places that visit Null Island.
@@ -754,6 +768,7 @@ class Database:
 
         return await self._do_count_query(joins, where_clauses, params)
 
+    @profile_async
     async def get_nullisland_placetype_facets(self, *, filters: SearchFilters) -> list[dict[str, Any]]:
         """
         Get placetype facets for Null Island places.
@@ -786,6 +801,7 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    @profile_async
     async def search_places_fts(  # noqa: PLR0913
         self,
         query_text: str,
@@ -905,6 +921,7 @@ class Database:
 
         return {row['woe_id']: dict(row) for row in rows}
 
+    @profile_async
     async def search_places_fts_count(
         self,
         query_text: str,
@@ -947,6 +964,7 @@ class Database:
             return 0
 
     @disk_cache(key_builder=_make_cache_key('placetypes'))
+    @profile_async
     async def get_placetypes(self) -> list[dict[str, Any]]:
         """
         Get all placetypes
@@ -957,6 +975,7 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    @profile_async
     async def get_licenses(self) -> list[dict[str, Any]]:
         """
         Get all licenses
@@ -967,6 +986,7 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    @profile_async
     async def get_random_place(self, filters: PlaceFilters) -> dict[str, Any] | None:
         """
         Get a random place
@@ -1008,6 +1028,7 @@ class Database:
             return None
         return dict(row)
 
+    @profile_async
     async def get_places_near_centroid(  # noqa: PLR0913
         self,
         lat: float,
@@ -1081,6 +1102,7 @@ class Database:
 
         return PaginatedResult(items=items, has_more=has_more)
 
+    @profile_async
     async def get_places_near_centroid_count(
         self,
         lat: float,
