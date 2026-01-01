@@ -79,7 +79,7 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
 
         country_woe_id = country['woe_id']
         total = await db.get_places_by_country_count(
-            country_woe_id,
+            country_woe_id=country_woe_id,
             filters=parsed.filters,
             placetype=placetype,
         )

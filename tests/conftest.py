@@ -2,6 +2,7 @@
 WOEplanet Spelunker: tests package; pytest fixtures.
 """
 
+import warnings
 from collections.abc import AsyncIterator, Iterator
 
 import pytest
@@ -9,6 +10,9 @@ from starlette.testclient import TestClient
 
 from woeplanet.spelunker.dependencies.database import Database
 from woeplanet.spelunker.server import app
+
+# Suppress ResourceWarning from aiosqlitepool cleanup
+warnings.filterwarnings('ignore', message='unclosed database', category=ResourceWarning)
 
 
 @pytest.fixture(scope='session')

@@ -6,7 +6,7 @@ export default defineConfig({
     publicDir: false,
     build: {
         outDir: '../static',
-        emptyOutDir: true,
+        emptyOutDir: false,
         rollupOptions: {
             input: {
                 site: resolve(__dirname, 'js/main.js')

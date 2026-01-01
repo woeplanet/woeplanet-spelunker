@@ -33,7 +33,7 @@ async def client_error_handler(request: Request, exc: HTTPException) -> HTMLResp
     Client error handler
     """
 
-    logger.exception('Client error: %s', request.url, exc_info=exc)
+    logger.warning('Client error %d on %s: %s', exc.status_code, request.url, exc.detail)
 
     template = get_templater().get_template('4xx.html.j2')
     template_args = {

@@ -5,6 +5,7 @@ WOEplanet Spelunker: dependencies package; database module.
 import json
 import logging
 import math
+import random
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -656,11 +657,16 @@ class Database:
             select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
         )
 
+    @disk_cache(
+        key_builder=lambda country_woe_id, filters, placetype=None: (
+            f'country_count:{country_woe_id}:{placetype}:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
+        )
+    )
     @profile_async
     async def get_places_by_country_count(
         self,
-        country_woe_id: int,
         *,
+        country_woe_id: int,
         filters: SearchFilters,
         placetype: str | None = None,
     ) -> int:
@@ -675,27 +681,35 @@ class Database:
 
         return await self._do_count_query(joins, where_clauses, params)
 
+    @disk_cache(
+        key_builder=lambda iso2, filters: (
+            f'placetypes_by_country:{iso2.upper()}:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
+        )
+    )
     @profile_async
     async def get_placetypes_by_country(
         self,
-        iso2: str,
         *,
+        iso2: str,
         filters: SearchFilters,
     ) -> list[dict[str, Any]]:
         """
         Get placetype facets (buckets with counts) for a given ISO2 country code.
         """
 
-        iso_upper = iso2.upper()
+        country = await self.get_country_by_iso(iso2)
+        if not country:
+            return []
+
+        country_woe_id = country['woe_id']
 
         joins = [
+            'JOIN places p ON a.woe_id = p.woe_id',
             'JOIN placetypes pt ON p.placetype_id = pt.id',
-            'JOIN admins a ON p.woe_id = a.woe_id',
-            'JOIN countries c ON a.country = c.woe_id',
         ]
-        where_clauses = ['UPPER(c.iso2) = ?']
-        params: list[Any] = [iso_upper]
-        apply_search_filters(filters, joins, where_clauses)
+        where_clauses = ['a.country = ?']
+        params: list[Any] = [country_woe_id]
+        apply_search_filters(filters, joins, where_clauses, FilterOptions(table_alias='p'))
 
         query = f"""
             SELECT
@@ -703,7 +717,7 @@ class Database:
                 pt.shortname,
                 pt.name,
                 COUNT(*) as count
-            FROM places p
+            FROM admins a
             {' '.join(joins)}
             WHERE {' AND '.join(where_clauses)}
             GROUP BY p.placetype_id, pt.shortname, pt.name
@@ -986,47 +1000,75 @@ class Database:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
+    async def _get_woeid_range(self) -> tuple[int, int]:
+        """
+        Get min/max woe_id range from places table.
+        """
+
+        cursor = await self._conn.execute('SELECT MIN(woe_id), MAX(woe_id) FROM places')
+        row = await cursor.fetchone()
+        if not row or row[0] is None:
+            return (0, 0)
+        return (row[0], row[1])
+
+    async def _is_valid_random_place(self, woe_id: int, filters: PlaceFilters) -> bool:
+        """
+        Check if a woe_id passes the random place filters.
+        """
+
+        if not filters.null_island:
+            cursor = await self._conn.execute(
+                'SELECT 1 FROM geometries.geometries WHERE woe_id = ? AND lat IS NOT NULL AND lng IS NOT NULL',
+                (woe_id,),
+            )
+            if not await cursor.fetchone():
+                return False
+
+        if not filters.deprecated:
+            cursor = await self._conn.execute(
+                'SELECT 1 FROM changes WHERE woe_id = ? AND superseded_by IS NOT NULL',
+                (woe_id,),
+            )
+            if await cursor.fetchone():
+                return False
+
+        return True
+
     @profile_async
     async def get_random_place(self, filters: PlaceFilters) -> dict[str, Any] | None:
         """
-        Get a random place
+        Get a random place using woe_id range sampling (O(log n) index seek).
         """
 
-        joins: list[str] = []
-        where_clauses: list[str] = []
+        min_id, max_id = await self._get_woeid_range()
+        if min_id == 0 and max_id == 0:
+            return None
+
+        where_clauses = ['woe_id >= ?']
         params: list[Any] = []
-
-        if filters.null_island:
-            joins.append('LEFT JOIN geometries.geometries g ON p.woe_id = g.woe_id')
-            where_clauses.append('(g.lat IS NOT NULL AND g.lng IS NOT NULL AND g.geom IS NOT NULL)')
-
-        if filters.deprecated:
-            joins.append('LEFT JOIN changes ch ON p.woe_id = ch.woe_id')
-            where_clauses.append('(ch.superseded_by IS NULL OR ch.woe_id IS NULL)')
 
         if filters.exclude_placetypes:
             placeholders = ','.join('?' * len(filters.exclude_placetypes))
-            where_clauses.append(f'p.placetype_id NOT IN ({placeholders})')
+            where_clauses.append(f'placetype_id NOT IN ({placeholders})')
             params.extend(filters.exclude_placetypes)
 
-        joins_sql = ' '.join(joins)
-        where_sql = f'WHERE {" AND ".join(where_clauses)}' if where_clauses else ''
-
         select_sql = f"""
-            SELECT p.woe_id
-            FROM places p
-            {joins_sql}
-            {where_sql}
-            ORDER BY RANDOM()
+            SELECT woe_id FROM places
+            WHERE {' AND '.join(where_clauses)}
             LIMIT 1
         """  # noqa: S608
 
-        logger.debug('%s - %s', select_sql, params)
-        cursor = await self._conn.execute(select_sql, params)
-        row = await cursor.fetchone()
-        if row is None:
-            return None
-        return dict(row)
+        max_attempts = 50
+        for _ in range(max_attempts):
+            random_id = random.randint(min_id, max_id)  # noqa: S311
+            query_params = [random_id, *params]
+
+            cursor = await self._conn.execute(select_sql, query_params)
+            row = await cursor.fetchone()
+            if row and await self._is_valid_random_place(row[0], filters):
+                return dict(row)
+
+        return None
 
     @profile_async
     async def get_places_near_centroid(  # noqa: PLR0913

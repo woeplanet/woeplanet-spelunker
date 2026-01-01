@@ -727,7 +727,7 @@ class TestGetPlacesByCountryCount:
         assert country is not None
 
         result = await db.get_places_by_country_count(
-            country['woe_id'],
+            country_woe_id=country['woe_id'],
             filters=default_search_filters,
         )
 
