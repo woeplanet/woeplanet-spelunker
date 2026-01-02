@@ -18,12 +18,12 @@
 			</div>
 			<div class="col-sm-8 place-info">
 			{%- if doc['superseded_by'] %}
-				<a href="{{ url_for('place_endpoint', woeid=doc['woe_id']) }}" woeid="woe-id-superceded">{{ doc['woe_id'] }}</a>
+				<a href="{{ url_for('place_endpoint', woeid=doc['woe_id']) }}" id="woe-id-superceded">{{ doc['woe_id'] }}</a>
 				<span class="label">
 					<div class="slug"><a class="label-superseded" href="{{ url_for('place_endpoint', woeid=doc['superseded_by']) }}">this place has been superseded by WOE ID {{ doc['superseded_by'] }}</a></div>
 				</span>
 			{%- else %}
-					<a href="{{ url_for('place_endpoint', woeid=doc['woe_id']) }}" woeid="woe-id">{{ doc['woe_id'] }}</a>
+					<a href="{{ url_for('place_endpoint', woeid=doc['woe_id']) }}" id="woe-id">{{ doc['woe_id'] }}</a>
 			{%- endif %}
 			</div>
 		</div>
