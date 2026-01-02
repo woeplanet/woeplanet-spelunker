@@ -61,13 +61,6 @@ export class WoeplanetMap {
         this.banner_width = 0
         this.min_map_height = 415
 
-        if (this.config.scale) {
-            console.log('scale: ' + this.config.scale)
-        }
-        if (this.config.placetype) {
-            console.log('placetype: ' + this.config.placetype)
-        }
-
         this.initSideMap()
         this.initMainMap()
     }
