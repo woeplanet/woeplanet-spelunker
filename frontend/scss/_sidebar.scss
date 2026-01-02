@@ -1,0 +1,39 @@
+#sidebar-info, #search-info {
+	font-size: $font-size-tiny;
+	margin: $spacing-md;
+	margin-left: $spacing-lg;
+
+	@include media-breakpoint-down(sm) {
+		margin-left: $spacing-sm;
+		margin-right: $spacing-sm;
+	}
+}
+
+#sidebar-info {
+	a {
+		text-decoration: underline;
+	}
+}
+
+#location {
+	#location-success, #location-error {
+		display: none;
+	}
+
+	.slug {
+		margin-top: $spacing-sm;
+	}
+}
+
+.slug {
+	font-size: $font-size-slug;
+
+	.search-again {
+		color: $grey-200;
+		margin-left: $spacing-xs;
+	}
+}
+
+#asc, #gg, #oc {
+	font-weight: 700;
+}

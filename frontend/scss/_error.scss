@@ -1,0 +1,17 @@
+#error {
+	display: flex;
+
+	#error-image {
+		width: 30%;
+
+		img {
+			width: 100%;
+			border-right: 20px;
+		}
+	}
+
+	#error-text {
+		padding-left: 20px;
+		flex-grow: 2;
+	}
+}

@@ -1,0 +1,145 @@
+#search {
+	margin-top: 10%;
+	margin-bottom: 10%;
+	text-align: center;
+}
+
+#searchbox {
+	display: inline-block;
+	text-align: left;
+}
+
+#q {
+	font-size: $font-size-input;
+	padding: 12px;
+
+	@include media-breakpoint-down(sm) {
+		font-size: $font-size-body-md;
+		padding: 8px;
+		width: 100%;
+		max-width: 280px;
+	}
+}
+
+#querysubmit {
+	border: 4px solid $black;
+	font-size: $font-size-input;
+	font-weight: 700;
+	padding: $spacing-xs;
+
+	@include media-breakpoint-down(sm) {
+		font-size: $font-size-body-md;
+		padding: 8px;
+		border-width: 3px;
+	}
+}
+
+#search-name {
+	font-weight: 700;
+    a {
+        color: $white;
+    }
+}
+
+#search-facets {
+	float: right;
+	border: solid thin;
+	margin-left: $spacing-lg;
+	margin-right: $spacing-lg;
+	min-width: 200px;
+	padding: $spacing-md;
+
+    li {
+	    line-height: 22px;
+	    font-size: $font-size-meta;
+	    padding-left: $spacing-md;
+    }
+
+	@include media-breakpoint-down(md) {
+		float: none;
+		margin: $spacing-sm;
+		min-width: auto;
+	}
+}
+
+#search-results {
+	padding-left: $spacing-xl;
+	margin-top: $spacing-lg;
+	margin-bottom: 60px;
+
+    ol  {
+        li {
+    	    line-height: 32px;
+            font-size: $font-size-body;
+
+            &:hover {
+                font-size: $font-size-input;
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+        }
+	}
+
+	@include media-breakpoint-down(md) {
+		padding-left: 30px;
+		padding-right: $spacing-sm;
+		margin-top: 25px;
+		margin-bottom: $spacing-lg;
+
+		ol li {
+			font-size: $font-size-body-md;
+			line-height: 28px;
+
+			&:hover {
+				font-size: 16pt;
+			}
+		}
+	}
+
+	@include media-breakpoint-down(sm) {
+		padding-left: $spacing-sm;
+		padding-right: $spacing-xs;
+		margin-top: $spacing-md;
+		margin-bottom: 30px;
+
+		ol li {
+			font-size: $font-size-body-sm;
+			line-height: 24px;
+
+			&:hover {
+				font-size: $font-size-body-md;
+			}
+		}
+	}
+}
+
+#search-query {
+	display: none;
+	padding-left: $spacing-xl;
+	padding-right: $spacing-xl;
+	padding-bottom: $spacing-md;
+
+	pre {
+		border: 1px dotted $grey-500;
+		font-size: $font-size-code;
+		max-height: 200px;
+		overflow-y: scroll;
+		word-break: break-all;
+		white-space: pre-wrap;
+	}
+
+	.timings {
+		float: right
+	}
+}
+
+.again {
+	font-size: $font-size-slug;
+	color: $grey-200;
+	margin-top: 1rem;
+}
+
+.facets {
+	color: $grey-700;
+	margin-bottom: $spacing-xs;
+}

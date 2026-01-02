@@ -1,0 +1,23 @@
+.license-entry {
+	margin-bottom: $spacing-lg;
+	padding-bottom: $spacing-md;
+	border-bottom: 1px dotted $grey-200;
+
+	&:last-child {
+		border-bottom: none;
+	}
+}
+
+.license-key {
+	font-family: sans-serif;
+	font-size: $font-size-heading;
+	font-weight: 700;
+	margin-bottom: $spacing-xs;
+}
+
+.license-attribution {
+	font-family: serif;
+	font-size: $font-size-body-md;
+	color: $grey-700;
+	line-height: 1.6;
+}

@@ -1,0 +1,92 @@
+#main {
+	padding-left: 0;
+	padding-right: 0;
+	margin-bottom: $spacing-xs;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+#content {
+	padding-left: 0;
+	padding-right: 0;
+	overflow-y: auto;
+}
+
+#side-bar {
+	padding-left: 0;
+	padding-right: 0;
+	border-left: 1px dotted $black;
+	background-color: $grey-50;
+}
+
+.page-banner {
+	color: $white;
+	background-color: $black;
+	font-size: $font-size-banner;
+	font-weight: 700;
+	padding-bottom: $spacing-md;
+	padding-top: 30px;
+	padding-left: $spacing-lg;
+	padding-right: 0;
+
+	@include media-breakpoint-down(lg) {
+		font-size: $font-size-banner-lg;
+		padding-left: 30px;
+	}
+
+	@include media-breakpoint-down(md) {
+		font-size: $font-size-banner-md;
+		padding-left: $spacing-md;
+		padding-top: $spacing-md;
+		padding-bottom: $spacing-sm;
+	}
+
+	@include media-breakpoint-down(sm) {
+		font-size: $font-size-banner-sm;
+		padding-left: $spacing-sm;
+		padding-top: $spacing-sm;
+		padding-bottom: $spacing-xs;
+	}
+}
+
+.page-content {
+	margin: $spacing-lg;
+	margin-right: 45px;
+	margin-top: $spacing-xl;
+
+    p {
+        font-family: serif;
+        font-size: $font-size-body;
+        color: $grey-900;
+		text-align: justify;
+		margin-top: 24px;
+		margin-bottom: 24px;
+    }
+
+	@include media-breakpoint-down(md) {
+		margin: 25px;
+		margin-top: 30px;
+
+		p {
+			font-size: $font-size-body-md;
+			margin-top: 16px;
+			margin-bottom: 16px;
+		}
+	}
+
+	@include media-breakpoint-down(sm) {
+		margin: $spacing-sm;
+		margin-top: $spacing-md;
+
+		p {
+			font-size: $font-size-body-sm;
+			text-align: left;
+		}
+	}
+}
+
+.text-panel {
+	background-color: $white;
+	color: $black;
+	padding: $spacing-xs;
+}

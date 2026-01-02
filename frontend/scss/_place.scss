@@ -1,0 +1,129 @@
+#woe-hierarchy {
+	-moz-column-count: auto;
+	-webkit-column-count: auto;
+	column-count: auto;
+
+    li {
+        font-size: $font-size-body;
+        line-height: 32px;
+    }
+}
+
+.place-entry {
+	font-size: $font-size-body;
+	border-bottom: 2px solid;
+	border-bottom-color: $white;
+}
+
+.place-label, .place-info {
+	font-size: $font-size-body;
+	padding: 25px;
+	padding-left: $spacing-lg;
+	padding-right: $spacing-xl;
+	vertical-align: text-top;
+	line-height: 30px;
+
+	@include media-breakpoint-down(md) {
+		font-size: $font-size-body-md;
+		padding: $spacing-sm;
+		padding-left: $spacing-md;
+		padding-right: $spacing-md;
+		line-height: 24px;
+	}
+
+	@include media-breakpoint-down(sm) {
+		font-size: $font-size-body-sm;
+		padding: $spacing-xs;
+		padding-left: $spacing-sm;
+		padding-right: $spacing-sm;
+	}
+}
+
+.click-here {
+	color: $grey-200 !important;
+}
+
+#woe-name {
+	font-weight: 700;
+}
+
+#woe-id {
+	font-weight: 700;
+}
+
+#woe-id-superceded {
+	text-decoration: line-through;
+	color: $grey-400;
+}
+
+#woe-provider {
+	font-size: $font-size-meta;
+}
+
+#woe-date-indexed {
+	font-size: $font-size-meta;
+}
+
+.label-basic {
+	background-color: $black;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.label-children {
+	background-color: $grey-900;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.label-adjacencies {
+	background-color: $grey-700;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.label-aliases {
+	background-color: $grey-500;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.label-supercedes {
+	background-color: $grey-300;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.label-superseded {
+	color: $grey-200;
+}
+
+.label-source {
+	background-color: $grey-100;
+	color: $white;
+	font-size: $font-size-heading;
+}
+
+.expandable-list {
+	summary {
+		list-style: none;
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		.show-less {
+			display: none;
+		}
+	}
+
+	&[open] summary {
+		.show-more {
+			display: none;
+		}
+
+		.show-less {
+			display: inline;
+		}
+	}
+}

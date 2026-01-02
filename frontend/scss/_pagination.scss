@@ -1,0 +1,21 @@
+#pagination {
+	font-size: $font-size-body-sm;
+	text-align: center;
+	margin-left: -$spacing-lg;
+	margin-top: $spacing-lg;
+}
+
+#pagination-first{
+	color: $grey-300;
+	font-weight: 700;
+}
+
+#pagination-last {
+	color: $grey-300;
+	font-weight: 700;
+}
+
+#pagination-current {
+	font-weight: 700;
+	margin: $spacing-md;
+}

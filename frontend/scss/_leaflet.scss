@@ -1,0 +1,13 @@
+.leaflet-popup-content {
+	a {
+		text-decoration: underline;
+
+		&:hover {
+			font-weight: 500;
+		}
+
+		&:visited {
+			color: $grey-900;
+		}
+	}
+}
