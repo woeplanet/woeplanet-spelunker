@@ -471,6 +471,42 @@ class TestGetCountriesFacets:
 
         assert isinstance(result, list)
 
+    async def test_get_countries_facets_with_null_island(self, db: Database) -> None:
+        """
+        Including null island places should affect results.
+        """
+
+        filters = SearchFilters(deprecated=False, unknown=False, null_island=True)
+        result = await db.get_countries_facets(filters=filters)
+
+        assert isinstance(result, list)
+
+    async def test_get_countries_facets_with_unknown(self, db: Database) -> None:
+        """
+        Including unknown placetypes should affect results.
+        """
+
+        filters = SearchFilters(deprecated=False, unknown=True, null_island=False)
+        result = await db.get_countries_facets(filters=filters)
+
+        assert isinstance(result, list)
+
+    async def test_get_countries_facets_include_all(self, db: Database) -> None:
+        """
+        Including all filter options should return more or equal results.
+        """
+
+        default_filters = SearchFilters(deprecated=False, unknown=False, null_island=False)
+        all_filters = SearchFilters(deprecated=True, unknown=True, null_island=True)
+
+        default_result = await db.get_countries_facets(filters=default_filters)
+        all_result = await db.get_countries_facets(filters=all_filters)
+
+        default_total = sum(c['count'] for c in default_result)
+        all_total = sum(c['count'] for c in all_result)
+
+        assert all_total >= default_total
+
 
 class TestGetTotalWoeids:
     """
@@ -536,6 +572,55 @@ class TestGetPlacetypeFacets:
         assert 'placetype_id' in result[0]
         assert 'shortname' in result[0]
         assert 'count' in result[0]
+
+    async def test_get_placetype_facets_with_deprecated(self, db: Database) -> None:
+        """
+        Including deprecated should affect results.
+        """
+
+        filters = SearchFilters(deprecated=True, unknown=False, null_island=False)
+        result = await db.get_placetype_facets(filters=filters)
+
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    async def test_get_placetype_facets_with_null_island(self, db: Database) -> None:
+        """
+        Including null island places should affect results.
+        """
+
+        filters = SearchFilters(deprecated=False, unknown=False, null_island=True)
+        result = await db.get_placetype_facets(filters=filters)
+
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    async def test_get_placetype_facets_with_unknown(self, db: Database) -> None:
+        """
+        Including unknown placetypes should return results.
+        """
+
+        filters = SearchFilters(deprecated=False, unknown=True, null_island=False)
+        result = await db.get_placetype_facets(filters=filters)
+
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    async def test_get_placetype_facets_include_all(self, db: Database) -> None:
+        """
+        Including all filter options should return more or equal counts.
+        """
+
+        default_filters = SearchFilters(deprecated=False, unknown=False, null_island=False)
+        all_filters = SearchFilters(deprecated=True, unknown=True, null_island=True)
+
+        default_result = await db.get_placetype_facets(filters=default_filters)
+        all_result = await db.get_placetype_facets(filters=all_filters)
+
+        default_total = sum(p['count'] for p in default_result)
+        all_total = sum(p['count'] for p in all_result)
+
+        assert all_total >= default_total
 
 
 class TestGetPlacesByPlacetype:
