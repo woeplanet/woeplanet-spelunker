@@ -67,12 +67,36 @@ a {
 	padding-top: 30px;
 	padding-left: 40px;
 	padding-right: 0;
+
+	@include media-breakpoint-down(lg) {
+		font-size: 48pt;
+		padding-left: 30px;
+	}
+
+	@include media-breakpoint-down(md) {
+		font-size: 36pt;
+		padding-left: 20px;
+		padding-top: 20px;
+		padding-bottom: 15px;
+	}
+
+	@include media-breakpoint-down(sm) {
+		font-size: 28pt;
+		padding-left: 15px;
+		padding-top: 15px;
+		padding-bottom: 10px;
+	}
 }
 
 #sidebar-info, #search-info {
 	font-size: 8pt;
 	margin: 20px;
 	margin-left: 40px;
+
+	@include media-breakpoint-down(sm) {
+		margin-left: 15px;
+		margin-right: 15px;
+	}
 }
 
 #sidebar-info {
@@ -86,10 +110,6 @@ a {
 	text-align: center;
 	margin-left: -40px;
 	margin-top: 40px;
-
-	.pages {
-		margin-top: 10px;
-	}
 }
 
 #pagination-first{
@@ -120,6 +140,12 @@ a {
 	    font-size: 10pt;
 	    padding-left: 20px;
     }
+
+	@include media-breakpoint-down(md) {
+		float: none;
+		margin: 15px;
+		min-width: auto;
+	}
 }
 
 #search-results {
@@ -138,6 +164,38 @@ a {
                 padding-bottom:5px;
             }
         }
+	}
+
+	@include media-breakpoint-down(md) {
+		padding-left: 30px;
+		padding-right: 15px;
+		margin-top: 25px;
+		margin-bottom: 40px;
+
+		ol li {
+			font-size: 14pt;
+			line-height: 28px;
+
+			&:hover {
+				font-size: 16pt;
+			}
+		}
+	}
+
+	@include media-breakpoint-down(sm) {
+		padding-left: 15px;
+		padding-right: 10px;
+		margin-top: 20px;
+		margin-bottom: 30px;
+
+		ol li {
+			font-size: 12pt;
+			line-height: 24px;
+
+			&:hover {
+				font-size: 14pt;
+			}
+		}
 	}
 }
 
@@ -158,9 +216,16 @@ a {
 	text-align: left;
 }
 
-#queryterm, #q {
+#q {
 	font-size: 20pt;
 	padding: 12px;
+
+	@include media-breakpoint-down(sm) {
+		font-size: 14pt;
+		padding: 8px;
+		width: 100%;
+		max-width: 280px;
+	}
 }
 
 #querysubmit {
@@ -168,6 +233,12 @@ a {
 	font-size: 20pt;
 	font-weight: 700;
 	padding:10px;
+
+	@include media-breakpoint-down(sm) {
+		font-size: 14pt;
+		padding: 8px;
+		border-width: 3px;
+	}
 }
 
 #woe-hierarchy {
@@ -179,11 +250,6 @@ a {
         font-size: 18pt;
         line-height:32px;
     }
-}
-
-.place-wrapper {
-	font-size: 18pt;
-	margin-bottom: 30px;
 }
 
 .place-entry {
@@ -199,23 +265,25 @@ a {
 	padding-right: 50px;
 	vertical-align: text-top;
 	line-height: 30px;
+
+	@include media-breakpoint-down(md) {
+		font-size: 14pt;
+		padding: 15px;
+		padding-left: 20px;
+		padding-right: 20px;
+		line-height: 24px;
+	}
+
+	@include media-breakpoint-down(sm) {
+		font-size: 12pt;
+		padding: 10px;
+		padding-left: 15px;
+		padding-right: 15px;
+	}
 }
 
 .click-here {
 	color: #ccc !important;
-}
-
-#details {
-	font-size: 18pt;
-	margin-bottom: 30px;
-}
-
-td {
-	padding: 25px;
-	padding-left: 40px;
-	padding-right: 50px;
-	vertical-align: text-top;
-	line-height: 30px;
 }
 
 #asc, #gg, #oc {
@@ -272,6 +340,27 @@ td {
 		margin-top: 24px;
 		margin-bottom: 24px;
     }
+
+	@include media-breakpoint-down(md) {
+		margin: 25px;
+		margin-top: 30px;
+
+		p {
+			font-size: 14pt;
+			margin-top: 16px;
+			margin-bottom: 16px;
+		}
+	}
+
+	@include media-breakpoint-down(sm) {
+		margin: 15px;
+		margin-top: 20px;
+
+		p {
+			font-size: 12pt;
+			text-align: left;
+		}
+	}
 }
 
 #side-bar {
@@ -279,11 +368,6 @@ td {
 	padding-right: 0;
 	border-left: 1px dotted  black;
 	background-color: #eee;
-}
-
-#source {
-	font-size: 11px;
-	text-align: right;
 }
 
 #footer {
@@ -297,6 +381,11 @@ td {
 
     a {
 	    color: #666;
+	}
+
+	@include media-breakpoint-down(sm) {
+		margin-left: 15px;
+		margin-right: 15px;
 	}
 }
 
@@ -379,6 +468,10 @@ ul {
         font-size: 10pt;
         padding-right: 15px;
     }
+
+	@include media-breakpoint-down(sm) {
+		column-count: 1;
+	}
 }
 
 
