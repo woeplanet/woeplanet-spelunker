@@ -57,7 +57,7 @@ def build_pagination_context(
                 request.url.remove_query_params(['before', 'page']).include_query_params(
                     after=last_id,
                     page=pagination.page + 1,
-                )
+                ),
             )
 
         if pagination.page > 1:
@@ -65,7 +65,7 @@ def build_pagination_context(
                 request.url.remove_query_params(['after', 'page']).include_query_params(
                     before=first_id,
                     page=pagination.page - 1,
-                )
+                ),
             )
 
     return PaginationContext(
@@ -95,14 +95,14 @@ def build_offset_pagination_context(
         next_url = str(
             request.url.remove_query_params(['page']).include_query_params(
                 page=pagination.page + 1,
-            )
+            ),
         )
 
     if pagination.page > 1:
         prev_url = str(
             request.url.remove_query_params(['page']).include_query_params(
                 page=pagination.page - 1,
-            )
+            ),
         )
 
     return PaginationContext(

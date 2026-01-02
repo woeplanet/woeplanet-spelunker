@@ -29,6 +29,7 @@ inflect_engine = inflect.engine()
 def plural_filter(value: str, count: int | None = None) -> str:
     """
     Jinja filter; returns the plural of a word or phrase
+
     e.g. "Point of Interest" -> "Points of Interest"
     """
 

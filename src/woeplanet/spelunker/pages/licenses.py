@@ -28,7 +28,8 @@ async def licenses_endpoint(request: Request) -> HTMLResponse:
         licenses = await db.get_licenses()
         if not licenses:
             raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Failed to get licenses from database'
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail='Failed to get licenses from database',
             )
 
     template = get_templater().get_template('licenses.html.j2')

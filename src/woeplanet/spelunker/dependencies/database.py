@@ -209,7 +209,9 @@ class Database:
 
     @profile_async
     async def get_place_by_id(  # noqa: C901, PLR0912, PLR0915
-        self, woe_id: int, filters: PlaceFilters
+        self,
+        woe_id: int,
+        filters: PlaceFilters,
     ) -> dict[str, Any] | None:
         """
         Get a place by WOEID
@@ -519,7 +521,10 @@ class Database:
         return [dict(row) for row in rows]
 
     def _build_placetype_query(
-        self, placetype_id: int, *, include_geometry: bool = True
+        self,
+        placetype_id: int,
+        *,
+        include_geometry: bool = True,
     ) -> tuple[list[str], list[str], list[Any], FilterOptions]:
         """
         Build query parts for placetype queries.
@@ -562,7 +567,13 @@ class Database:
         apply_search_filters(filters, joins, where_clauses, opts)
 
         return await self._do_pagination_query(
-            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
+            select_cols,
+            joins,
+            where_clauses,
+            params,
+            after=after,
+            before=before,
+            limit=limit,
         )
 
     @profile_async
@@ -654,13 +665,19 @@ class Database:
         apply_search_filters(filters, joins, where_clauses, opts)
 
         return await self._do_pagination_query(
-            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
+            select_cols,
+            joins,
+            where_clauses,
+            params,
+            after=after,
+            before=before,
+            limit=limit,
         )
 
     @disk_cache(
         key_builder=lambda country_woe_id, filters, placetype=None: (
             f'country_count:{country_woe_id}:{placetype}:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
-        )
+        ),
     )
     @profile_async
     async def get_places_by_country_count(
@@ -675,7 +692,9 @@ class Database:
         """
 
         joins, where_clauses, params, opts = self._build_country_query(
-            country_woe_id, placetype, include_geometry=False
+            country_woe_id,
+            placetype,
+            include_geometry=False,
         )
         apply_search_filters(filters, joins, where_clauses, opts)
 
@@ -684,7 +703,7 @@ class Database:
     @disk_cache(
         key_builder=lambda iso2, filters: (
             f'placetypes_by_country:{iso2.upper()}:{filters.deprecated}:{filters.unknown}:{filters.null_island}'
-        )
+        ),
     )
     @profile_async
     async def get_placetypes_by_country(
@@ -730,7 +749,9 @@ class Database:
         return [dict(row) for row in rows]
 
     def _build_nullisland_query(
-        self, *, include_placetype: bool = True
+        self,
+        *,
+        include_placetype: bool = True,
     ) -> tuple[list[str], list[str], list[Any], FilterOptions]:
         """
         Build query parts for null island queries.
@@ -768,7 +789,13 @@ class Database:
         apply_search_filters(filters, joins, where_clauses, opts)
 
         return await self._do_pagination_query(
-            select_cols, joins, where_clauses, params, after=after, before=before, limit=limit
+            select_cols,
+            joins,
+            where_clauses,
+            params,
+            after=after,
+            before=before,
+            limit=limit,
         )
 
     @profile_async
@@ -794,7 +821,10 @@ class Database:
         ]
         where_clauses = ['(g.lat IS NULL OR g.lng IS NULL OR (g.lat = 0 AND g.lng = 0))']
         apply_search_filters(
-            filters, joins, where_clauses, FilterOptions(geometry_join_exists=True, include_null_island=False)
+            filters,
+            joins,
+            where_clauses,
+            FilterOptions(geometry_join_exists=True, include_null_island=False),
         )
 
         query = f"""
@@ -1082,7 +1112,6 @@ class Database:
     ) -> PaginatedResult:
         """
         Get places within a specified distance (in metres) of a point.
-        Uses SpatiaLite ST_Distance with geodesic calculation.
         """
 
         # Bounding box pre-filter: ~111km per degree latitude, adjusted for longitude
@@ -1201,7 +1230,8 @@ class Database:
 
 
 async def create_connection_factory(
-    db_path: Path, geom_db_path: Path
+    db_path: Path,
+    geom_db_path: Path,
 ) -> Callable[[], Coroutine[Any, Any, aiosqlite.Connection]]:
     """
     Create a connection factory function for the pool

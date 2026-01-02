@@ -145,7 +145,7 @@ async def place_map_endpoint(request: Request) -> HTMLResponse:
                             [ne_lng, ne_lat],
                             [sw_lng, ne_lat],
                             [sw_lng, sw_lat],
-                        ]
+                        ],
                     ],
                 },
             }

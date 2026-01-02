@@ -59,10 +59,6 @@ def disk_cache(
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     """
     Decorator for caching async database methods using DiskCache.
-
-    Args:
-        key_fn: Function to build cache key from method arguments
-        expire: Optional TTL in seconds
     """
 
     def decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:

@@ -20,13 +20,19 @@ async def random_endpoint(request: Request) -> RedirectResponse:
 
     async with get_db(request=request) as db:
         filters = PlaceFilters(
-            geometry=False, ancestors=False, hierarchy=False, names=False, neighbours=False, children=False
+            geometry=False,
+            ancestors=False,
+            hierarchy=False,
+            names=False,
+            neighbours=False,
+            children=False,
         )
         random_place = await db.get_random_place(filters)
 
         if not random_place:
             raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Failed to get random place from database'
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail='Failed to get random place from database',
             )
 
         place = await db.get_place_by_id(random_place['woe_id'], filters)
@@ -47,13 +53,19 @@ async def _random_place(request: Request) -> dict[str, Any]:
 
     async with get_db(request=request) as db:
         filters = PlaceFilters(
-            geometry=False, ancestors=False, hierarchy=False, names=False, neighbours=False, children=False
+            geometry=False,
+            ancestors=False,
+            hierarchy=False,
+            names=False,
+            neighbours=False,
+            children=False,
         )
         random_place = await db.get_random_place(filters)
 
         if not random_place:
             raise HTTPException(
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail='Failed to get random place from database'
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail='Failed to get random place from database',
             )
 
         place = await db.get_place_by_id(random_place['woe_id'], filters)
