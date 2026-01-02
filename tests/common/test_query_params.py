@@ -15,8 +15,10 @@ from woeplanet.spelunker.common.query_params import (
     parse_filter_params,
     parse_nearby_params,
     parse_pagination,
+    parse_placetype_filter,
     parse_search_params,
 )
+from woeplanet.spelunker.config.placetypes import Placetype
 
 FIRST_PAGE = 1
 FIFTH_PAGE = 5
@@ -304,3 +306,94 @@ class TestParseSearchParams:
             parse_search_params(request)
 
         assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
+
+
+class TestParsePlacetypeFilter:
+    """
+    Tests for the parse_placetype_filter function.
+    """
+
+    def test_no_placetype_returns_none(self) -> None:
+        """
+        No placetype param should return None.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams('')
+
+        result = parse_placetype_filter(request)
+
+        assert result is None
+
+    def test_valid_placetype_returns_enum(self) -> None:
+        """
+        Valid placetype should return Placetype enum.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams('placetype=town')
+
+        result = parse_placetype_filter(request)
+
+        assert result == Placetype.TOWN
+        assert isinstance(result, Placetype)
+
+    def test_case_insensitive(self) -> None:
+        """
+        Placetype lookup should be case-insensitive.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams('placetype=TOWN')
+
+        result = parse_placetype_filter(request)
+
+        assert result == Placetype.TOWN
+
+    def test_mixed_case(self) -> None:
+        """
+        Mixed case should be normalised.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams('placetype=ToWn')
+
+        result = parse_placetype_filter(request)
+
+        assert result == Placetype.TOWN
+
+    def test_invalid_placetype_raises(self) -> None:
+        """
+        Invalid placetype should raise HTTPException.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams('placetype=nonexistent')
+
+        with pytest.raises(HTTPException) as exc_info:
+            parse_placetype_filter(request)
+
+        assert exc_info.value.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        ('placetype_str', 'expected'),
+        [
+            ('country', Placetype.COUNTRY),
+            ('town', Placetype.TOWN),
+            ('state', Placetype.STATE),
+            ('suburb', Placetype.SUBURB),
+            ('continent', Placetype.CONTINENT),
+            ('ocean', Placetype.OCEAN),
+        ],
+    )
+    def test_all_valid_placetypes(self, placetype_str: str, expected: Placetype) -> None:
+        """
+        All valid placetypes should be parsed correctly.
+        """
+
+        request = MagicMock()
+        request.query_params = QueryParams(f'placetype={placetype_str}')
+
+        result = parse_placetype_filter(request)
+
+        assert result == expected

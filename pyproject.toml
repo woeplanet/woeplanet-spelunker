@@ -71,7 +71,10 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "D","LOG015", "Q", "TRY004"]
+ignore=["COM812","D102","D104","D107","D200","D202","D203","D212","D400","D401","D415"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101"]

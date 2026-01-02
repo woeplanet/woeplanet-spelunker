@@ -8,10 +8,11 @@ from http import HTTPStatus
 from typing import Annotated, Literal
 from urllib.parse import urlencode
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
+from woeplanet.spelunker.config.placetypes import Placetype
 from woeplanet.spelunker.config.settings import get_settings
 from woeplanet.spelunker.dependencies.database import SearchFilters
 
@@ -31,6 +32,25 @@ class SearchParams(BaseModel):
 
     q: Annotated[str, Field(max_length=MAX_QUERY_LENGTH)] = ''
     name_type: NameType = 'any'
+
+
+class PlacetypeFilterModel(BaseModel):
+    """
+    Placetype filter query parameter with validation.
+    """
+
+    placetype: Placetype | None = None
+
+    @field_validator('placetype', mode='before')
+    @classmethod
+    def normalise_placetype(cls, v: str | None) -> str | None:
+        """
+        Normalise placetype to lowercase for case-insensitive matching.
+        """
+
+        if v is None:
+            return None
+        return v.lower()
 
 
 class NearbyParamsModel(BaseModel):
@@ -193,6 +213,27 @@ def parse_search_params(request: Request) -> SearchParams:
             status_code=HTTPStatus.BAD_REQUEST,
             detail='Invalid search parameters',
         ) from exc
+
+
+def parse_placetype_filter(request: Request) -> Placetype | None:
+    """
+    Parse and validate placetype query param.
+    """
+
+    try:
+        validated = PlacetypeFilterModel(placetype=request.query_params.get('placetype'))
+    except ValidationError as exc:
+        errors = exc.errors()
+        if errors:
+            msg = errors[0].get('msg', 'Invalid placetype parameter')
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=msg) from exc
+
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Invalid placetype parameter',
+        ) from exc
+    else:
+        return validated.placetype
 
 
 def sanitise_name_search_query(query: str) -> str | None:
