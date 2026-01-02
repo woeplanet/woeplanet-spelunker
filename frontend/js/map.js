@@ -101,13 +101,10 @@ export class WoeplanetMap {
         }).addTo(this.maps.side)
 
         if (!isEmptyObject(this.config.bounds)) {
-            console.log('set side map to bounds')
             this.maps.side.fitBounds(this.config.bounds)
         } else if (this.config.centroid) {
-            console.log('set side map to centroid')
             this.maps.side.setView(this.config.centroid, this.config.zoom)
         } else {
-            console.log('set side map to null island')
             this.loadNullIsland(this.maps.side, 3)
         }
     }
@@ -128,19 +125,16 @@ export class WoeplanetMap {
         }).addTo(this.maps.main)
 
         if (!isEmptyObject(this.config.bounds)) {
-            console.log('set main map to bounds')
             this.maps.main.fitBounds(this.config.bounds)
             this.drawGeometry(this.maps.main)
             this.openPopup()
             this.syncMaps()
         } else if (this.config.centroid) {
-            console.log('set main map to centroid')
             this.maps.main.setView(this.config.centroid, this.config.zoom)
             this.drawGeometry(this.maps.main)
             this.openPopup()
             this.syncMaps()
         } else {
-            console.log('set main map to null island')
             this.loadNullIsland(this.maps.main, 4, () => {
                 this.openPopup()
                 this.syncMaps()
@@ -176,6 +170,9 @@ export class WoeplanetMap {
 
         try {
             const response = await fetch(this.config.nullisland_url)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} when fetching Null Island GeoJSON`)
+            }
             const data = await response.json()
 
             const myStyle = {
@@ -197,7 +194,7 @@ export class WoeplanetMap {
 
             if (callback) callback()
         } catch (error) {
-            console.error('Failed to load null island:', error)
+            console.error('Failed to load Null Island GeoJSON:', error)
         }
     }
 

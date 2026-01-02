@@ -14,6 +14,7 @@ from woeplanet.spelunker.common.pagination import build_pagination_context
 from woeplanet.spelunker.common.path_params import get_path_iso_code
 from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
+from woeplanet.spelunker.config.placetypes import PLACETYPE_COUNTRY, PLACETYPE_UNKNOWN
 from woeplanet.spelunker.dependencies.database import get_db
 from woeplanet.spelunker.dependencies.templates import get_templater
 from woeplanet.spelunker.pages.random import _random_place
@@ -50,7 +51,7 @@ async def country_facets_endpoint(request: Request) -> HTMLResponse:
         'iso': place.get('iso', 'GB'),
         'nearby': place.get('woe_id'),
         'name': place.get('name'),
-        'scale': placetype_to_scale(int(place.get('placetype_id', 0))),
+        'scale': placetype_to_scale(int(place.get('placetype_id', PLACETYPE_UNKNOWN))),
         'doc': place,
     }
     content = await template.render_async(request=request, **template_args)
@@ -115,7 +116,7 @@ async def country_search_endpoint(request: Request) -> HTMLResponse:
         'bounds': coords.bounds,
         'woeid': place['woe_id'] if place else None,
         'name': place['name'] if place else None,
-        'scale': placetype_to_scale(12),
+        'scale': placetype_to_scale(PLACETYPE_COUNTRY),
         'doc': place,
         'pagination': paging,
         'buckets': buckets,

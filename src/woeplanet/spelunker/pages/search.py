@@ -18,6 +18,7 @@ from woeplanet.spelunker.common.query_params import (
     sanitise_name_search_query,
 )
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
+from woeplanet.spelunker.config.placetypes import PLACETYPE_COUNTRY
 from woeplanet.spelunker.dependencies.database import get_db
 from woeplanet.spelunker.dependencies.templates import get_templater
 from woeplanet.spelunker.pages.random import _random_place
@@ -106,7 +107,7 @@ async def _do_name_search(request: Request, q: str, name_type: str) -> HTMLRespo
         'bounds': coords.bounds,
         'woeid': place['woe_id'] if place else None,
         'name': place['name'] if place else None,
-        'scale': placetype_to_scale(12),
+        'scale': placetype_to_scale(PLACETYPE_COUNTRY),
         'doc': place,
         'pagination': paging,
     }

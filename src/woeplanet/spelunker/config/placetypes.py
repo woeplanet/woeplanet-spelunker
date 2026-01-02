@@ -6,6 +6,9 @@ from typing import Any
 
 from woeplanet.spelunker.dependencies.database import Database
 
+PLACETYPE_UNKNOWN = 0
+PLACETYPE_COUNTRY = 12
+
 
 class PlacetypeCache:
     """
