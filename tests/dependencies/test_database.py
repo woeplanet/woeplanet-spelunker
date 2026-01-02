@@ -822,13 +822,13 @@ class TestGetNullislandPlacetypeFacets:
         assert isinstance(result, list)
 
 
-class TestSearchPlacesFts:
+class TestSearchPlaces:
     """
-    Tests for the search_places_fts method.
+    Tests for the search_places method.
     """
 
     @parametrize
-    async def test_fts_queries(
+    async def test_search_queries(
         self,
         db: Database,
         default_search_filters: SearchFilters,
@@ -838,7 +838,7 @@ class TestSearchPlacesFts:
         Valid query should return paginated result.
         """
 
-        result = await db.search_places_fts(
+        result = await db.search_places(
             query,
             filters=default_search_filters,
             limit=DEFAULT_LIMIT,
@@ -846,7 +846,7 @@ class TestSearchPlacesFts:
 
         assert isinstance(result, PaginatedResult)
 
-    async def test_search_places_fts_with_name_type(
+    async def test_search_places_with_name_type(
         self,
         db: Database,
         default_search_filters: SearchFilters,
@@ -855,7 +855,7 @@ class TestSearchPlacesFts:
         Name type filter should be applied.
         """
 
-        result = await db.search_places_fts(
+        result = await db.search_places(
             'London',
             name_type='S',
             filters=default_search_filters,
@@ -864,7 +864,7 @@ class TestSearchPlacesFts:
 
         assert isinstance(result, PaginatedResult)
 
-    async def test_search_places_fts_empty_query_returns_empty(
+    async def test_search_places_empty_query_returns_empty(
         self,
         db: Database,
         default_search_filters: SearchFilters,
@@ -873,7 +873,7 @@ class TestSearchPlacesFts:
         Empty query should return empty result.
         """
 
-        result = await db.search_places_fts(
+        result = await db.search_places(
             '',
             filters=default_search_filters,
             limit=DEFAULT_LIMIT,
@@ -883,12 +883,12 @@ class TestSearchPlacesFts:
         assert len(result.items) == 0
 
 
-class TestSearchPlacesFtsCount:
+class TestSearchPlacesCount:
     """
-    Tests for the search_places_fts_count method.
+    Tests for the search_places_count method.
     """
 
-    async def test_search_places_fts_count_returns_int(
+    async def test_search_places_count_returns_int(
         self,
         db: Database,
         default_search_filters: SearchFilters,
@@ -897,7 +897,7 @@ class TestSearchPlacesFtsCount:
         Valid query should return count.
         """
 
-        result = await db.search_places_fts_count(
+        result = await db.search_places_count(
             'London',
             filters=default_search_filters,
         )

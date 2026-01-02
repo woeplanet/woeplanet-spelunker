@@ -86,7 +86,7 @@ test_nearby_params:
     lng: -0.1
     distance: 1000
 
-test_fts_queries:
+test_search_queries:
   - id: simple_name
     query: London
   - id: partial_match

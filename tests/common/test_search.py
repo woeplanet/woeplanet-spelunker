@@ -4,7 +4,7 @@ WOEplanet Spelunker: tests package; FTS sanitisation tests.
 
 import pytest
 
-from woeplanet.spelunker.common.fts import sanitise_name_search_query
+from woeplanet.spelunker.common.query_params import sanitise_name_search_query
 
 
 class TestSanitiseNameSearchQuery:

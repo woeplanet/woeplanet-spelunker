@@ -816,7 +816,7 @@ class Database:
         return [dict(row) for row in rows]
 
     @profile_async
-    async def search_places_fts(  # noqa: PLR0913
+    async def search_places(  # noqa: PLR0913
         self,
         query_text: str,
         *,
@@ -827,7 +827,7 @@ class Database:
         limit: int = 50,
     ) -> PaginatedResult:
         """
-        Search places using FTS5 with optional name_type filter and keyset pagination.
+        Search places with optional name_type filter and keyset pagination.
         """
 
         params: list[Any] = [query_text]
@@ -871,34 +871,34 @@ class Database:
         logger.debug('%s - %s', query, params)
         try:
             cursor = await self._conn.execute(query, params)
-            fts_rows = [dict(r) for r in await cursor.fetchall()]
+            search_rows = [dict(r) for r in await cursor.fetchall()]
         except Exception:
-            logger.exception('FTS query failed')
+            logger.exception('Search query failed')
             return PaginatedResult(items=[], has_more=False)
 
-        if not fts_rows:
+        if not search_rows:
             return PaginatedResult(items=[], has_more=False)
 
-        has_more = len(fts_rows) > limit
-        fts_rows = fts_rows[:limit]
+        has_more = len(search_rows) > limit
+        search_rows = search_rows[:limit]
         if before:
-            fts_rows = fts_rows[::-1]
+            search_rows = search_rows[::-1]
 
-        woe_ids = [r['woe_id'] for r in fts_rows]
-        places = await self._enrich_fts_results(woe_ids, filters)
+        woe_ids = [r['woe_id'] for r in search_rows]
+        places = await self._enrich_search_results(woe_ids, filters)
 
         items = []
-        for fts_row in fts_rows:
-            woe_id = fts_row['woe_id']
+        for row in search_rows:
+            woe_id = row['woe_id']
             if woe_id in places:
-                item = {**fts_row, **places[woe_id]}
+                item = {**row, **places[woe_id]}
                 items.append(item)
 
         return PaginatedResult(items=items, has_more=has_more)
 
-    async def _enrich_fts_results(self, woe_ids: list[int], filters: SearchFilters) -> dict[int, dict[str, Any]]:
+    async def _enrich_search_results(self, woe_ids: list[int], filters: SearchFilters) -> dict[int, dict[str, Any]]:
         """
-        Enrich FTS results with place details, filtering as needed.
+        Enrich search results with place details, filtering as needed.
         """
 
         if not woe_ids:
@@ -936,7 +936,7 @@ class Database:
         return {row['woe_id']: dict(row) for row in rows}
 
     @profile_async
-    async def search_places_fts_count(
+    async def search_places_count(
         self,
         query_text: str,
         *,
@@ -944,7 +944,7 @@ class Database:
         filters: SearchFilters,
     ) -> int:
         """
-        Get count of FTS search results.
+        Get count of search results.
         """
 
         joins = [
@@ -974,7 +974,7 @@ class Database:
             row = await cursor.fetchone()
             return row[0] if row else 0
         except Exception:
-            logger.exception('FTS count query failed')
+            logger.exception('Search count query failed')
             return 0
 
     @disk_cache(key_builder=_make_cache_key('placetypes'))

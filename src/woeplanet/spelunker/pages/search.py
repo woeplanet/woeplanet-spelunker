@@ -10,9 +10,13 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 
 from woeplanet.spelunker.common.coordinates import extract_coordinates
-from woeplanet.spelunker.common.fts import sanitise_name_search_query
 from woeplanet.spelunker.common.pagination import build_pagination_context
-from woeplanet.spelunker.common.query_params import parse_filter_params, parse_pagination, parse_search_params
+from woeplanet.spelunker.common.query_params import (
+    parse_filter_params,
+    parse_pagination,
+    parse_search_params,
+    sanitise_name_search_query,
+)
 from woeplanet.spelunker.config.place_scale import placetype_to_scale
 from woeplanet.spelunker.dependencies.database import get_db
 from woeplanet.spelunker.dependencies.templates import get_templater
@@ -69,12 +73,12 @@ async def _do_name_search(request: Request, q: str, name_type: str) -> HTMLRespo
     pagination = parse_pagination(request)
 
     async with get_db(request=request) as db:
-        total = await db.search_places_fts_count(
+        total = await db.search_places_count(
             sanitised_query,
             name_type=name_type if name_type != 'any' else None,
             filters=parsed.filters,
         )
-        result = await db.search_places_fts(
+        result = await db.search_places(
             sanitised_query,
             name_type=name_type if name_type != 'any' else None,
             filters=parsed.filters,
