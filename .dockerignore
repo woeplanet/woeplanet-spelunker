@@ -1,0 +1,11 @@
+**
+
+!pyproject.toml
+!uv.lock
+!README.md
+
+!/config/**
+!/docker/**
+!/src/**
+!/static/**
+!/templates/**
