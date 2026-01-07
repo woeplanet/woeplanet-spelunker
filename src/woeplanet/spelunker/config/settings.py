@@ -27,9 +27,11 @@ class Settings(BaseSettings):
     static_dir: DirectoryPath
     templates_dir: DirectoryPath
     storage_dir: DirectoryPath
+    downloads_dir: DirectoryPath
     cache_dir: DirectoryPath
     db_path: FilePath
     geom_db_path: FilePath
+    downloads_manifest: FilePath
 
     logging_config: FilePath
     log_level: Literal['trace', 'debug', 'info', 'warning', 'error', 'critical']

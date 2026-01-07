@@ -3,7 +3,6 @@ name = "woeplanet-spelunker"
 version = "2.0.0"
 description = "The WOEplanet Spelunker"
 authors = [{name="Gary Gale", email="gary@vicchi.org"}]
-
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -17,10 +16,14 @@ dependencies = [
     "pydantic-settings>=2.12.0",
     "python-dotenv>=1.2.1",
     "pyuca>=1.2",
+    "pyyaml>=6.0.3",
     "starlette>=0.50.0",
     "starlette-async-jinja>=1.13.3",
     "uvicorn>=0.38.0",
 ]
+
+[project.scripts]
+server = "woeplanet.spelunker.server:main"
 
 [dependency-groups]
 dev = [

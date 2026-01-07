@@ -9,6 +9,7 @@ from woeplanet.spelunker.config.settings import get_settings
 from woeplanet.spelunker.pages.about import about_endpoint
 from woeplanet.spelunker.pages.countries import country_facets_endpoint, country_search_endpoint
 from woeplanet.spelunker.pages.credits import credits_endpoint
+from woeplanet.spelunker.pages.data import data_endpoint, download_endpoint
 from woeplanet.spelunker.pages.index import index_endpoint
 from woeplanet.spelunker.pages.licenses import licenses_endpoint
 from woeplanet.spelunker.pages.nullisland import nullisland_endpoint
@@ -41,5 +42,7 @@ def routes() -> list[Route | Mount]:
         Route(path='/random', endpoint=random_endpoint),
         Route(path='/search', endpoint=search_endpoint),
         Route(path='/licenses', endpoint=licenses_endpoint),
+        Route(path='/data', endpoint=data_endpoint),
+        Route(path='/downloads/{filename:path}', endpoint=download_endpoint, name='downloads'),
         Mount(path='/static', app=StaticFiles(directory=settings.static_dir), name='static'),
     ]
