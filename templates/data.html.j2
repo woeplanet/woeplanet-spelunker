@@ -1,3 +1,4 @@
+{% import 'includes/icons.j2' as icons with context %}
 {%- extends "base.html.j2" %}
 {%- block title %}Data{%- endblock %}
 {%- block content %}
@@ -7,15 +8,17 @@
 		<div class="page-content">
             <p>WOEplanet was originally distributed as a set of <a href="https://github.com/woeplanet-data">GitHub repositories</a>, sliced and diced by placetype and ISO-3166 country code with a single GeoJSON file per WOEID.</p>
             <p>Due to GitHub's per file and per repository size limits, this made for a less than fun experience when trying to download all the data and stitch it back together again. So we're not doing that any more.</p>
-            <p>All WOEIDs for a placetype are now available as two SQLite databases: one for the places data and one with SpatiaLite enabled for the geometries. The SHA256 hash of each database is provided for verification.</p>
+            <p>All WOEIDs for a placetype are now available as two SQLite databases: one for the places data and one with SpatiaLite enabled for the geometries.
+            The <a href="{{ url_for('downloads', filename='manifest.yml') }}">download manifest</a> and SHA256 hash of each database is provided for verification.</p>
+            <p>A <a href="https://github.com/woeplanet/woeplanet-build/blob/master/scripts/merge_dbs.py">helper script</a> in the <a href="https://github.com/woeplanet/woeplanet-build">woeplanet-build</a> repository can be used to stich/merge all downloaded databases.</p>
 			{%- for placetype, entry in manifest.placetypes.items() %}
 			<div id="{{ entry.name }}" class="license-entry">
 				<h3 class="license-key">{{ entry.name }}</h3>
                     <h4>Places</h4>
-                    <p><a href="{{ url_for('downloads', filename=entry.places.db) }}">{{ entry.places.db }}</a>&nbsp;({{ entry.places.size | filesizeformat }})</p>
+                    <p>{{ icons.download() }}<a href="{{ url_for('downloads', filename=entry.places.db) }}">{{ entry.places.db }}</a>&nbsp;({{ entry.places.size | filesizeformat }})</p>
                     <p><small><code>sha256:{{ entry.places.sum }}</code></small></p>
                     <h4>Geometries</h4>
-                    <p><a href="{{ url_for('downloads', filename=entry.geometries.db) }}">{{ entry.geometries.db }}</a>&nbsp;({{ entry.geometries.size | filesizeformat }})</p>
+                    <p>{{ icons.download() }}<a href="{{ url_for('downloads', filename=entry.geometries.db) }}">{{ entry.geometries.db }}</a>&nbsp;({{ entry.geometries.size | filesizeformat }})</p>
                     <p><small><code>sha256:{{ entry.geometries.sum }}</code></small></p>
 			</div>
 			{%- endfor %}

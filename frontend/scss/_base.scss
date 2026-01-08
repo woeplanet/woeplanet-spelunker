@@ -44,11 +44,15 @@ ul {
 	}
 }
 
-svg:not(.leaflet-zoom-animated) {
+svg:not(.leaflet-zoom-animated):not(.icon) {
 	width: 100%;
 	height: 100%;
 }
 
 .woe {
 	color: $ypurple;
+}
+
+code {
+    color: $ypurple;
 }
