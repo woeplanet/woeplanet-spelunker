@@ -5,6 +5,7 @@ WOEplanet Spelunker: dependencies package; templates module.
 from functools import lru_cache
 from http import HTTPStatus
 
+import emoji
 import inflect
 import jinja2
 import pyuca
@@ -100,6 +101,14 @@ def name_type_filter(value: str) -> str:
     return NAME_TYPES.get(value, 'unknown')
 
 
+def emoji_filter(value: str) -> str:
+    """
+    Jinja2 filter; returns a CLDR short form emoji
+    """
+
+    return emoji.emojize(f':{value}:', language='alias')
+
+
 @lru_cache
 def get_templater() -> Jinja2Templates:
     """
@@ -117,5 +126,6 @@ def get_templater() -> Jinja2Templates:
     env.filters['commafy'] = comma_filter
     env.filters['anyfy'] = any_filter
     env.filters['name_type'] = name_type_filter
+    env.filters['emojify'] = emoji_filter
 
     return Jinja2Templates(env=env)
