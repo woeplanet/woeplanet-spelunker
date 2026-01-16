@@ -111,19 +111,18 @@ apt-get install -qyy \
     -o APT::Install-Suggests=false \
     ca-certificates \
     curl \
+    libsqlite3-mod-spatialite \
     python3 \
     tini
 apt-get clean
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 EOT
 
-COPY ./docker/woeplanet-spelunker/files/docker-entrypoint.sh /opt/woeplanet/
-COPY --from=build /opt/woeplanet /opt/woeplanet
-# - don't run as root
 COPY --from=build --chown=woeplanet:woeplanet /opt/woeplanet /opt/woeplanet
-COPY ./config/logging.yml /opt/woeplanet/config/logging.yml
-    COPY ./static /opt/woeplanet/static
-COPY ./templates /opt/woeplanet/templates
+COPY --chown=woeplanet:woeplanet ./docker/woeplanet-spelunker/files/docker-entrypoint.sh /opt/woeplanet/
+COPY --chown=woeplanet:woeplanet ./config/logging.yml /opt/woeplanet/config/logging.yml
+COPY --chown=woeplanet:woeplanet ./static /opt/woeplanet/static
+COPY --chown=woeplanet:woeplanet ./templates /opt/woeplanet/templates
 
 WORKDIR /opt/woeplanet
 EXPOSE 80

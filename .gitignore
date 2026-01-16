@@ -6,7 +6,8 @@
 __pycache__/
 dist/
 .*rules
-.env
+.env*
+!.env.template
 downloads/**/*
 !downloads/.gitkeep
 frontend/node_modules/

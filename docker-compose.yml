@@ -1,0 +1,10 @@
+# docker run --rm -it --entrypoint bash -p 8080:8080 -v $(pwd)/.env.docker:/opt/woeplanet/.env -v $(pwd)/config/logging.yml:/opt/woeplanet/config/logging.yml -v $(pwd)/storage:/opt/woeplanet/storage ghcr.io/woeplanet/woeplanet-spelunker:latest
+services:
+  spelunker:
+    image: ghcr.io/woeplanet/woeplanet-spelunker:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.env.docker:/opt/woeplanet/.env
+      - ./config/logging.yml:/opt/woeplanet/config/logging.yml
+      - ./storage:/opt/woeplanet/storage
