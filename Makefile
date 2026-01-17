@@ -179,6 +179,16 @@ _build-image: repo-login _init-builder
 		--ssh default \
 		--build-arg VERSION=${VERSION} \
 		--build-arg DEBIAN_RELEASE=${DEBIAN_RELEASE} \
+		--annotation "index:org.opencontainers.image.url=https://github.com/woeplanet/woeplanet-spelunker" \
+		--annotation "index:org.opencontainers.image.documentation=https://github.com/woeplanet/woeplanet-spelunker/blob/master/README.md" \
+		--annotation "index:org.opencontainers.image.source=https://github.com/woeplanet/woeplanet-spelunker" \
+		--annotation "index:org.opencontainers.image.version=${VERSION}" \
+		--annotation "index:org.opencontainers.image.revision=${VERSION}" \
+		--annotation "index:org.opencontainers.image.vendor=WOEplanet" \
+		--annotation "index:org.opencontainers.image.licenses=BSD-3-Clause" \
+		--annotation "index:org.opencontainers.image.title=The WOEplanet Spelunker" \
+		--annotation "index:org.opencontainers.image.description=The WOEplanet Spelunker" \
+		--annotation "index:org.opencontainers.image.base.name=docker.io/debian:${DEBIAN_RELEASE}" \
 		${BUILD_FLAGS} .
 
 .PHONY: _tag-image
