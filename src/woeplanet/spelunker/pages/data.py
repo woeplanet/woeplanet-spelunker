@@ -44,7 +44,7 @@ async def download_endpoint(request: Request) -> FileResponse:
 
     settings = get_settings()
     filename = request.path_params['filename']
-    file_path = settings.downloads_dir / filename
+    file_path = settings.woeplanet_downloads_dir / filename
 
     if not file_path.exists() or not file_path.is_file():
         raise HTTPException(status_code=404, detail='File not found')

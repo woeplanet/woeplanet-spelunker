@@ -129,7 +129,7 @@ EXPOSE 80
 ENTRYPOINT ["/usr/bin/tini", "-v", "--", "/opt/woeplanet/docker-entrypoint.sh"]
 CMD ["server"]
 STOPSIGNAL SIGINT
-HEALTHCHECK CMD curl --silent --fail http://localhost:80/health || exit 1
+# HEALTHCHECK CMD curl --silent --fail http://localhost:80/health || exit 1
 
 LABEL org.opencontainers.image.url="https://github.com/woeplanet/woeplanet-spelunker"
 LABEL org.opencontainers.image.documentation="https://github.com/woeplanet/woeplanet-spelunker/blob/master/README.md"
@@ -139,6 +139,7 @@ LABEL org.opencontainers.image.revision=${VERSION}
 LABEL org.opencontainers.image.vendor="WOEplanet"
 LABEL org.opencontainers.image.licenses="BSD-3-Clause"
 LABEL org.opencontainers.image.title="The WOEplanet Spelunker"
+LABEL org.opencontainers.image.description="The WOEplanet Spelunker"
 LABEL org.opencontainers.image.base.name=docker.io/debian:${DEBIAN_RELEASE}
 
 ### End - runtime

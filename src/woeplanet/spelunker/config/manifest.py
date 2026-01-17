@@ -47,6 +47,6 @@ def get_manifest() -> Manifest:
     """
 
     settings = get_settings()
-    with settings.downloads_manifest.open(mode='r', encoding='utf-8') as ifh:
+    with settings.woeplanet_downloads_manifest.open(mode='r', encoding='utf-8') as ifh:
         data = yaml.safe_load(ifh)
         return Manifest.model_validate(data)

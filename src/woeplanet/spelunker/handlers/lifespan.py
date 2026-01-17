@@ -61,8 +61,8 @@ async def lifespan(app: Starlette) -> AsyncIterator[None]:
 
     logger.info('Worker starting up')
     settings = get_settings()
-    app.state.db_pool = await init_pool(settings.db_path, settings.geom_db_path)
-    init_cache(settings.cache_dir)
+    app.state.db_pool = await init_pool(settings.woeplanet_db_path, settings.woeplanet_geom_db_path)
+    init_cache(settings.woeplanet_cache_dir)
     await prewarm_cache(app)
     logger.info('Worker ready')
     yield

@@ -115,7 +115,7 @@ def get_templater() -> Jinja2Templates:
     Return the Jinja2 templates instance including custom filters
     """
 
-    loader = jinja2.FileSystemLoader(str(settings.templates_dir))
+    loader = jinja2.FileSystemLoader(str(settings.woeplanet_templates_dir))
     env = jinja2.Environment(autoescape=True, enable_async=True, loader=loader)
 
     env.filters['langname'] = language_filter

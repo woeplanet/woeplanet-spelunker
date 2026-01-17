@@ -44,5 +44,5 @@ def routes() -> list[Route | Mount]:
         Route(path='/licenses', endpoint=licenses_endpoint),
         Route(path='/data', endpoint=data_endpoint),
         Route(path='/downloads/{filename:path}', endpoint=download_endpoint, name='downloads'),
-        Mount(path='/static', app=StaticFiles(directory=settings.static_dir), name='static'),
+        Mount(path='/static', app=StaticFiles(directory=settings.woeplanet_static_dir), name='static'),
     ]

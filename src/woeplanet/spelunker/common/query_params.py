@@ -135,7 +135,7 @@ def parse_nearby_params(request: Request) -> NearbyParams:
     return NearbyParams(
         lat=validated.lat,
         lng=validated.lng,
-        distance=validated.distance if validated.distance else settings.nearby_distance,
+        distance=validated.distance if validated.distance else settings.woeplanet_nearby_distance,
     )
 
 

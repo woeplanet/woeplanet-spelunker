@@ -17,7 +17,7 @@ def is_profiling_enabled() -> bool:
     Are we profiling?
     """
 
-    return get_settings().log_level == 'debug'
+    return get_settings().woeplanet_log_level == 'debug'
 
 
 def profile_async[T, **P](func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:

@@ -20,26 +20,26 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=dotenv.find_dotenv(), env_file_encoding='utf-8', extra='ignore')
 
-    host: str
-    port: int
+    woeplanet_host: str
+    woeplanet_port: int
 
-    config_dir: DirectoryPath
-    static_dir: DirectoryPath
-    templates_dir: DirectoryPath
-    storage_dir: DirectoryPath
-    downloads_dir: DirectoryPath
-    cache_dir: DirectoryPath
-    db_path: FilePath
-    geom_db_path: FilePath
-    downloads_manifest: FilePath
+    woeplanet_config_dir: DirectoryPath
+    woeplanet_static_dir: DirectoryPath
+    woeplanet_templates_dir: DirectoryPath
+    woeplanet_storage_dir: DirectoryPath
+    woeplanet_downloads_dir: DirectoryPath
+    woeplanet_cache_dir: DirectoryPath
+    woeplanet_db_path: FilePath
+    woeplanet_geom_db_path: FilePath
+    woeplanet_downloads_manifest: FilePath
 
-    logging_config: FilePath
-    log_level: Literal['trace', 'debug', 'info', 'warning', 'error', 'critical']
+    woeplanet_logging_config: FilePath
+    woeplanet_log_level: Literal['trace', 'debug', 'info', 'warning', 'error', 'critical']
 
-    cache_ttl: int = DEFAULT_CACHE_TTL
-    nearby_distance: int = DEFAULT_NEARBY_DISTANCE
+    woeplanet_cache_ttl: int = DEFAULT_CACHE_TTL
+    woeplanet_nearby_distance: int = DEFAULT_NEARBY_DISTANCE
 
-    @field_validator('db_path', 'geom_db_path', mode='after')
+    @field_validator('woeplanet_db_path', 'woeplanet_geom_db_path', mode='after')
     @classmethod
     def _make_absolute(cls, value: FilePath) -> FilePath:
         """

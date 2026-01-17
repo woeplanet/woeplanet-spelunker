@@ -25,7 +25,7 @@ middleware = [
     Middleware(TimingMiddleware),  # type: ignore[arg-type]
 ]
 app = Starlette(
-    debug=settings.log_level == 'debug',
+    debug=settings.woeplanet_log_level == 'debug',
     routes=routes(),
     exception_handlers=handlers,  # type: ignore[arg-type]
     lifespan=lifespan,
@@ -41,11 +41,11 @@ def main() -> None:
     workers = multiprocessing.cpu_count() * 2 + 1
     uvicorn.run(
         'woeplanet.spelunker.server:app',
-        host=settings.host,
-        port=settings.port,
+        host=settings.woeplanet_host,
+        port=settings.woeplanet_port,
         workers=workers,
-        log_level=settings.log_level,
-        log_config=settings.logging_config.as_posix(),
+        log_level=settings.woeplanet_log_level,
+        log_config=settings.woeplanet_logging_config.as_posix(),
         proxy_headers=True,
         server_header=False,
     )
