@@ -10,7 +10,7 @@ A Python web application for querying and browsing [WhereOnEarth](https://en.wik
 
 WOEplanet is Where On Earth (AKA WOE, also AKA GeoPlanet) data, smushed up with coordinate and boundary data from Flickr Shapes, Quattroshapes and Natural Earth Data (that's fancy talk for _polygons_) as well as concordances and other metadata rescued from `woe.spum.org` before it died and went offline.
 
-The WOEplanet Spelunker is a [Starlette](https://starlette.dev/) based web app, hosted at [`woeplanet.org](https://woeplanet.org) for visualising, poking into and searching the WOEplanet data.
+The WOEplanet Spelunker is a [Starlette](https://starlette.dev/) based web app, hosted at [`woeplanet.org`](https://woeplanet.org) for visualising, poking into and searching the WOEplanet data.
 
 This Spelunker is a spiritual successor to [woedb](https://web.archive.org/web/20180308192417/http://woe.spum.org/) by [Aaron Straup Cope](https://www.aaronland.info/weblog/2010/04/05/milkshake/#woedb), and draws inspiration from the [Who's On First Spelunker](https://spelunker.whosonfirst.org/).
 

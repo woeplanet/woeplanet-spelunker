@@ -1,6 +1,6 @@
 [project]
 name = "woeplanet-spelunker"
-version = "2.0.0"
+version = "2.0.1"
 description = "The WOEplanet Spelunker"
 authors = [{name="Gary Gale", email="gary@vicchi.org"}]
 readme = "README.md"

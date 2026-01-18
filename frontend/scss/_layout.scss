@@ -4,6 +4,12 @@
 	margin-bottom: $spacing-xs;
 	margin-left: 0;
 	margin-right: 0;
+	overflow-x: hidden;
+
+	@include media-breakpoint-down(sm) {
+		padding-left: $spacing-sm;
+		padding-right: $spacing-sm;
+	}
 }
 
 #content {
